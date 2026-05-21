@@ -90,8 +90,8 @@
         @click="goToFunction(func.path)"
         class="function-card bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:shadow-md hover:border-gray-300 transition-all duration-300 flex items-center gap-4"
       >
-        <div class="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-gray-100 rounded-xl">
-          <img :src="func.icon" :alt="func.name" class="w-full h-full object-contain p-2" />
+        <div class="w-12 h-12 flex items-center justify-center flex-shrink-0">
+          <img :src="func.icon" :alt="func.name" class="w-full h-full object-contain" />
         </div>
         <div class="flex-1 min-w-0">
           <h3 class="text-base font-semibold text-gray-800 mb-0.5">{{ func.name }}</h3>
@@ -120,6 +120,10 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useUserStore } from '../stores/user'
 import { calculateFortune } from '../utils/fortune'
+import iconAiqing from '@/assets/images/icon_aiqing.png'
+import iconPeiban from '@/assets/images/icon_peiban.png'
+import iconTree from '@/assets/images/icon_tree.png'
+import iconTarot from '@/assets/images/icon_tarot.png'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -144,21 +148,11 @@ const fortune = computed(() => {
   return calculateFortune({ birthDate: '2000-01-01', name: 'Visitor' }, currentLocale.value)
 })
 
-const getIconPath = (iconName: string): string => {
-  const icons: Record<string, string> = {
-    'icon_aiqing': '/src/assets/images/icon_aiqing.png',
-    'icon_peiban': '/src/assets/images/icon_peiban.png',
-    'icon_tree': '/src/assets/images/icon_tree.png',
-    'icon_tarot': '/src/assets/images/icon_tarot.png'
-  }
-  return icons[iconName] || '/src/assets/images/icon_tarot.png'
-}
-
 const functions = computed(() => [
-  { id: 1, name: t('homeFeatures.loveAssistant'), description: currentLocale.value === 'zh' ? '帮你回消息、哄人、推进关系' : 'Help reply messages, comfort, advance relationships', icon: getIconPath('icon_aiqing'), bgColor: '#FFEEF2', path: '/love-assistant' },
-  { id: 2, name: t('homeFeatures.emotionCompanion'), description: currentLocale.value === 'zh' ? '当你孤单、想念时给你安慰' : 'Comfort when you are lonely or missing someone', icon: getIconPath('icon_peiban'), bgColor: '#E8F4F8', path: '/emotion-companion' },
-  { id: 3, name: t('homeFeatures.emotionTreeHole'), description: t('homeFeatures.keepSecret'), icon: getIconPath('icon_tree'), bgColor: '#FAF5E6', path: '/tree-hole' },
-  { id: 4, name: t('homeFeatures.tarotWorld'), description: currentLocale.value === 'zh' ? '带你感受一下玄学世界' : 'Experience the mystical world', icon: getIconPath('icon_tarot'), bgColor: '#F3E8FF', path: '/tarot' }
+  { id: 1, name: t('homeFeatures.loveAssistant'), description: currentLocale.value === 'zh' ? '帮你回消息、哄人、推进关系' : 'Help reply messages, comfort, advance relationships', icon: iconAiqing, bgColor: '#FFEEF2', path: '/love-assistant' },
+  { id: 2, name: t('homeFeatures.emotionCompanion'), description: currentLocale.value === 'zh' ? '当你孤单、想念时给你安慰' : 'Comfort when you are lonely or missing someone', icon: iconPeiban, bgColor: '#E8F4F8', path: '/emotion-companion' },
+  { id: 3, name: t('homeFeatures.emotionTreeHole'), description: t('homeFeatures.keepSecret'), icon: iconTree, bgColor: '#FAF5E6', path: '/tree-hole' },
+  { id: 4, name: t('homeFeatures.tarotWorld'), description: currentLocale.value === 'zh' ? '带你感受一下玄学世界' : 'Experience the mystical world', icon: iconTarot, bgColor: '#F3E8FF', path: '/tarot' }
 ])
 
 const goToProfile = () => router.push('/profile')
