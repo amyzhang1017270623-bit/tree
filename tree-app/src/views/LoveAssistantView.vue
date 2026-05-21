@@ -704,10 +704,11 @@ const handleImageUpload = async (event: Event) => {
       imageUploadProgress.value = 100
       console.log('Image analysis complete, imageUploadProgress set to 100')
     } catch (error) {
-      console.error('Failed to analyze image:', error)
-      console.error('Error details:', error.message)
+      const err = error as any
+      console.error('Failed to analyze image:', err)
+      console.error('Error details:', err.message)
       // 降级：只添加图片标记
-      chatInput.value += `[图片分析失败: ${error.message || '未知错误'}，请手动输入聊天内容]\n`
+      chatInput.value += `[图片分析失败: ${err.message || '未知错误'}，请手动输入聊天内容]\n`
       imageUploadProgress.value = 100
     }
     

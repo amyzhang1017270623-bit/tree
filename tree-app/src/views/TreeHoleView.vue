@@ -199,7 +199,7 @@ const startRecording = async () => {
     // 尝试使用 Web Speech API 进行识别
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       try {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
         recognition.value = new SpeechRecognition()
         
         // 设置识别参数

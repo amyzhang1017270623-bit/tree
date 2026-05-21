@@ -51,6 +51,7 @@ export const useUserStore = defineStore('user', () => {
     treeHole: 0,
     tarot: 0,
     loveAssistant: 0,
+    assistant: 0,
     registerDate: Date.now()
   })
 
@@ -85,6 +86,7 @@ export const useUserStore = defineStore('user', () => {
       treeHole: 0,
       tarot: 0,
       loveAssistant: 0,
+      assistant: 0,
       registerDate: Date.now()
     }
     tarotFreeCount.value = 2
@@ -94,7 +96,7 @@ export const useUserStore = defineStore('user', () => {
     emotionCompanionHistory.value = []
   }
 
-  const incrementUsage = (type: 'emotionCompanion' | 'treeHole' | 'tarot' | 'loveAssistant') => {
+  const incrementUsage = (type: 'emotionCompanion' | 'treeHole' | 'tarot' | 'loveAssistant' | 'assistant') => {
     usageStats.value[type]++
   }
 

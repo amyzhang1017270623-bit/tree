@@ -481,12 +481,12 @@ export const analyzeImageContent = async (imageBase64: string, prompt?: string):
     }
     // 格式10: 处理output.choices中的content数组
     else if (data.output?.choices?.[0]?.message?.content && Array.isArray(data.output.choices[0].message.content)) {
-      result = data.output.choices[0].message.content.map(item => item.text).join('')
+      result = data.output.choices[0].message.content.map((item: any) => item.text).join('')
       console.log('[Multimodal API] Found output.choices[0].message.content (array joined)')
     }
     // 格式11: 处理choices中的content数组
     else if (data.choices?.[0]?.message?.content && Array.isArray(data.choices[0].message.content)) {
-      result = data.choices[0].message.content.map(item => item.text).join('')
+      result = data.choices[0].message.content.map((item: any) => item.text).join('')
       console.log('[Multimodal API] Found choices[0].message.content (array joined)')
     }
     

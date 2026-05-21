@@ -427,7 +427,7 @@ const startRecording = async () => {
     
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       try {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
         recognition.value = new SpeechRecognition()
         
         recognition.value.continuous = true
