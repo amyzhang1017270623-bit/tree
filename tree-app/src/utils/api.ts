@@ -1,10 +1,8 @@
-const API_KEY = 'sk-3ea880e116f0438e926d0c99e47e8674'
-
 const ENDPOINTS = {
-  cn: '/api-cn',
-  global: '/api-global',
-  multiCn: '/api-multi-cn',
-  multiGlobal: '/api-multi-global'
+  cn: '/.netlify/functions/qwen-api/cn',
+  global: '/.netlify/functions/qwen-api/global',
+  multiCn: '/.netlify/functions/qwen-api/multiCn',
+  multiGlobal: '/.netlify/functions/qwen-api/multiGlobal'
 }
 
 export interface ChatMessage {
@@ -71,8 +69,7 @@ export const callQwenAPI = async (messages: ChatMessage[], region?: 'cn' | 'glob
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: 'qwen-plus',
@@ -380,12 +377,11 @@ export const analyzeImageContent = async (imageBase64: string, prompt?: string):
     console.log(`[Multimodal API] Image data length: ${imageData.length}`)
     console.log(`[Multimodal API] Prompt: ${prompt}`)
 
-    // 直接调用阿里云DashScope API（不使用代理）
-    const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
+    // 使用Netlify Function代理
+    const response = await fetch('/.netlify/functions/qwen-api/multiCn', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: 'qwen3.5-omni-plus',
@@ -584,13 +580,12 @@ export const analyzeVoice = async (audioBlob: Blob): Promise<string> => {
     const base64data = await base64Promise
     console.log('[Voice Recognition] Audio converted to base64, length:', base64data.length)
     
-    // 使用 qwen3.5-omni-plus 进行语音识别
+    // 使用Netlify Function代理进行语音识别
     try {
-      const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
+      const response = await fetch('/.netlify/functions/qwen-api/multiCn', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           model: 'qwen3.5-omni-plus',
