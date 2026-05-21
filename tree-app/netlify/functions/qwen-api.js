@@ -1,4 +1,7 @@
-const API_KEY = 'sk-3ea880e116f0438e926d0c99e47e8674'
+const API_KEYS = {
+  cn: 'sk-3ea880e116f0438e926d0c99e47e8674',
+  global: 'sk-97f4661f0fbb47a18a2d3c4f9667098a'
+}
 
 const ENDPOINTS = {
   cn: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
@@ -26,12 +29,14 @@ exports.handler = async (event, context) => {
     }
 
     const targetUrl = ENDPOINTS[endpointKey]
+    const isCNEndpoint = endpointKey === 'cn' || endpointKey === 'multiCn'
+    const apiKey = isCNEndpoint ? API_KEYS.cn : API_KEYS.global
     
     const response = await fetch(targetUrl, {
       method: httpMethod,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: body
     })
