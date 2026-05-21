@@ -1,5 +1,3 @@
-const fetch = require('node-fetch')
-
 const API_KEY = 'sk-3ea880e116f0438e926d0c99e47e8674'
 
 const ENDPOINTS = {
