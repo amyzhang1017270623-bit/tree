@@ -50,11 +50,12 @@ export const detectRegion = async (): Promise<boolean> => {
   }
 
   try {
-    const response = await fetch('https://ipapi.co/json/')
+    const response = await fetch('https://api.ipify.org?format=json')
     const data = await response.json()
+    const ip = data.ip || ''
     
-    const chinaCountries = ['CN', 'TW', 'HK', 'MO']
-    isChinaRegion = chinaCountries.includes(data.country_code || '')
+    const chinaIpRanges = ['1.0.16.', '1.0.32.', '1.1.1.', '1.1.2.', '1.1.3.', '1.1.4.', '1.1.5.', '119.29.', '119.30.', '120.23.', '121.40.', '121.41.', '121.42.', '121.43.', '183.195.', '183.196.', '183.197.', '183.198.', '183.199.', '203.119.', '203.208.', '223.56.', '223.57.', '223.58.', '223.59.', '223.60.', '223.61.', '223.62.', '223.63.']
+    isChinaRegion = chinaIpRanges.some(range => ip.startsWith(range))
     return isChinaRegion
   } catch (error) {
     console.warn('Failed to detect region, defaulting to CN:', error)
