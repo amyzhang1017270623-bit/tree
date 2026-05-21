@@ -55,6 +55,16 @@ const routes = [
     path: '/payment',
     name: 'Payment',
     component: () => import('../views/PaymentView.vue')
+  },
+  {
+    path: '/assistant',
+    name: 'Assistant',
+    component: () => import('../views/AssistantView.vue')
+  },
+  {
+    path: '/assistant/reminders',
+    name: 'AssistantReminders',
+    component: () => import('../views/ReminderView.vue')
   }
 ]
 

@@ -123,6 +123,7 @@ import { ref, reactive, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useUserStore, type ChatMessage } from '../stores/user'
+import { getEmotionCompanionReply } from '../utils/api'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -178,6 +179,15 @@ const messages = ref<ChatMessage[]>([
   { id: 'init', text: `${t('emotionCompanion.greeting')}${t('characters.xiaoWei')}，${t('emotionCompanion.niceToMeetYou')}`, isUser: false, timestamp: Date.now() }
 ])
 const messageInput = ref('')
+
+const scrollToBottom = () => {
+  nextTick(() => {
+    const chatContainer = document.querySelector('.chat-messages')
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight
+    }
+  })
+}
 
 // 自动保存对话
 watch(messages, () => {
@@ -287,16 +297,19 @@ const handleSurveyNext = () => {
   }
 }
 
-const sendMessage = () => {
+const sendMessage = async () => {
   if (!messageInput.value.trim()) return
   
+  const userText = messageInput.value
   messages.value.push({
     id: Date.now().toString(),
-    text: messageInput.value,
+    text: userText,
     isUser: true,
     timestamp: Date.now()
   })
   messageInput.value = ''
+  
+  scrollToBottom()
   
   // 统计使用次数（每个会话只统计一次）
   if (!hasTrackedUsage) {
@@ -304,7 +317,31 @@ const sendMessage = () => {
     hasTrackedUsage = true
   }
   
-  setTimeout(() => {
+  try {
+    if (selectedCharacter.value) {
+      const reply = await getEmotionCompanionReply(
+        userText,
+        {
+          characterName: t(selectedCharacter.value.nameKey),
+          characterAvatar: selectedCharacter.value.avatar,
+          characterId: selectedCharacter.value.id,
+          surveyAnswers: { ...surveyAnswers }
+        },
+        messages.value.slice(0, -1) // 传递历史对话（排除当前刚添加的用户消息）
+      )
+      
+      messages.value.push({
+        id: (Date.now() + 1).toString(),
+        text: reply || t('emotionCompanion.listening'),
+        isUser: false,
+        timestamp: Date.now()
+      })
+      
+      scrollToBottom()
+    }
+  } catch (error) {
+    console.error('Error getting emotion companion reply:', error)
+    // 降级到硬编码回复
     const replies = [
       t('emotionCompanion.listening'),
       t('emotionCompanion.understandFeelings'),
@@ -318,7 +355,9 @@ const sendMessage = () => {
       isUser: false,
       timestamp: Date.now()
     })
-  }, 500)
+    
+    scrollToBottom()
+  }
 }
 
 const goBack = () => router.push('/home')

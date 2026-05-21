@@ -14,6 +14,7 @@ export interface ChatMessage {
   text: string
   isUser: boolean
   timestamp: number
+  imageUrl?: string
 }
 
 export interface LoveAssistantConversation {
@@ -142,6 +143,11 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
+  // 删除恋爱助手对话记录
+  const removeLoveAssistantHistory = (id: string) => {
+    loveAssistantHistory.value = loveAssistantHistory.value.filter(item => item.id !== id)
+  }
+
   // 添加情感陪伴对话记录
   const addEmotionCompanionConversation = (conversation: Omit<EmotionCompanionConversation, 'id' | 'timestamp'>) => {
     const existingIndex = emotionCompanionHistory.value.findIndex(
@@ -186,6 +192,7 @@ export const useUserStore = defineStore('user', () => {
     useTarotReading,
     buyTarotCards,
     addLoveAssistantConversation,
+    removeLoveAssistantHistory,
     addEmotionCompanionConversation,
     getEmotionCompanionConversation
   }

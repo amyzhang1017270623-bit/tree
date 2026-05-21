@@ -1,5 +1,5 @@
 <template>
-  <div class="home-container min-h-screen bg-gradient-to-b from-gray-50 to-white px-6 pt-10 pb-16">
+  <div class="home-container min-h-screen bg-gradient-to-b from-gray-50 to-white px-6 pt-10 pb-16 relative">
     <div class="header flex justify-between items-center mb-8">
       <h1 class="text-2xl font-bold text-gray-800">0号树洞</h1>
       <div class="flex items-center gap-3">
@@ -83,24 +83,33 @@
       <span class="text-pink-400 text-base">✦</span>
     </div>
 
-    <div class="functions-list space-y-5">
+    <div class="functions-list space-y-4">
       <div
         v-for="func in functions"
         :key="func.id"
         @click="goToFunction(func.path)"
-        class="function-card bg-white border border-gray-200 rounded-2xl p-6 cursor-pointer hover:shadow-lg hover:border-gray-300 transition-all duration-300 flex items-center gap-5"
+        class="function-card bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:shadow-md hover:border-gray-300 transition-all duration-300 flex items-center gap-4"
       >
-        <div class="w-16 h-16 flex items-center justify-center flex-shrink-0">
+        <div class="w-12 h-12 flex items-center justify-center flex-shrink-0">
           <img :src="`/src/assets/images/${func.icon}.png`" :alt="func.name" class="w-full h-full object-contain" />
         </div>
         <div class="flex-1 min-w-0">
-          <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ func.name }}</h3>
-          <p class="text-gray-500 text-sm">{{ func.description }}</p>
+          <h3 class="text-base font-semibold text-gray-800 mb-0.5">{{ func.name }}</h3>
+          <p class="text-gray-500 text-xs">{{ func.description }}</p>
         </div>
-        <svg class="w-5 h-5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
         </svg>
       </div>
+    </div>
+
+    <div 
+      class="assistant-float-btn"
+      @click="goToAssistant"
+      @contextmenu.prevent="goToReminders"
+      title="点击进入助理，右键快速新建提醒"
+    >
+      <img src="@/assets/images/icon_assistant.svg" class="w-6 h-6 assistant-icon" alt="Assistant" />
     </div>
   </div>
 </template>
@@ -145,6 +154,8 @@ const functions = computed(() => [
 const goToProfile = () => router.push('/profile')
 const goToFortune = () => router.push('/fortune')
 const goToFunction = (path: string) => router.push(path)
+const goToAssistant = () => router.push('/assistant')
+const goToReminders = () => router.push('/assistant/reminders')
 </script>
 
 <style scoped>
@@ -255,5 +266,34 @@ const goToFunction = (path: string) => router.push(path)
 
 .lucky-number p {
   writing-mode: vertical-lr;
+}
+
+.assistant-float-btn {
+  position: fixed;
+  right: 24px;
+  bottom: 100px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.assistant-float-btn:hover {
+  background: #000;
+  transform: scale(1.05);
+}
+
+.assistant-icon {
+  filter: brightness(0) invert(1);
+}
+
+.assistant-float-btn:active {
+  transform: scale(0.95);
 }
 </style>

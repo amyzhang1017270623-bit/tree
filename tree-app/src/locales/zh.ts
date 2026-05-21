@@ -118,7 +118,8 @@ export default {
     drewCard: '抽到的是',
     keywords: '关键词：',
     coreCard2: '核心主牌',
-    setsTone: '为这件事定下了基调'
+    setsTone: '为这件事定下了基调',
+    interpreting: '解读中...'
   },
   emotionCompanion: {
     title: '情感陪伴',
@@ -152,9 +153,9 @@ export default {
     next: '下一步',
     finish: '完成',
     greeting: '嗨，我是',
-    niceToMeet: '很高兴认识你！我是一个',
-    loverPersonality: '的恋人',
-    speak: '说话',
+    niceToMeet: '很高兴认识你！我是一个善解人意的',
+    loverPersonality: '恋人，',
+    speak: '愿意倾听你的心声',
     willAccompany: '，会用心陪伴你~',
     placeholder: '输入消息...',
     niceToMeetYou: '很高兴认识你~',
@@ -266,12 +267,15 @@ export default {
     getVip: '开通 VIP',
     vipFeatures: 'VIP 专属权益',
     unlimitedAnalyze: '无限次分析',
-    history: '历史记录',
+    history: '解析记录',
     records: '记录',
     highAccuracy: '高精度',
     buyTimes: '购买次卡',
     getOne: '次',
     getTen: '次',
+    inputHint: '分析聊天内容，获取专属回复建议',
+    uploadImage: '上传图片',
+    uploadFile: '上传文件',
     getTwenty: '次'
   },
   zodiac: {
@@ -321,6 +325,7 @@ export default {
     birthday: '生日',
     birthTime: '出生时间',
     phone: '手机号',
+    usageStats: '使用统计',
     usageStatistics: '使用统计',
     emotionCompanionUsage: '情感陪伴使用',
     emotionCompanion: '情感陪伴',

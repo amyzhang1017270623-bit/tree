@@ -118,7 +118,8 @@ export default {
     drewCard: 'You drew ',
     keywords: ' Keywords: ',
     coreCard2: 'Core Card ',
-    setsTone: 'sets the tone for this matter'
+    setsTone: 'sets the tone for this matter',
+    interpreting: 'Interpreting...'
   },
   emotionCompanion: {
     title: 'Emotional Companion',
@@ -272,6 +273,9 @@ export default {
     buyTimes: 'Buy usage pack',
     getOne: 'time',
     getTen: 'times',
+    inputHint: 'Analyze chat content, get personalized reply suggestions',
+    uploadImage: 'Upload Image',
+    uploadFile: 'Upload File',
     getTwenty: 'times'
   },
   zodiac: {

@@ -58,6 +58,63 @@
       </div>
     </div>
 
+    <div class="reminder-settings mt-10 p-5 bg-gray-50 rounded-xl">
+      <h3 class="font-semibold mb-4">提醒设置</h3>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600">当天提醒</span>
+          <button 
+            @click="reminderStore.updateSettings({ remindDayOf: !reminderStore.remindDayOf })"
+            :class="[
+              'w-12 h-6 rounded-full transition-colors relative',
+              reminderStore.remindDayOf ? 'bg-gray-800' : 'bg-gray-300'
+            ]"
+          >
+            <span 
+              :class="[
+                'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
+                reminderStore.remindDayOf ? 'left-7' : 'left-1'
+              ]"
+            ></span>
+          </button>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600">提前1天提醒</span>
+          <button 
+            @click="reminderStore.updateSettings({ remind1DayBefore: !reminderStore.remind1DayBefore })"
+            :class="[
+              'w-12 h-6 rounded-full transition-colors relative',
+              reminderStore.remind1DayBefore ? 'bg-gray-800' : 'bg-gray-300'
+            ]"
+          >
+            <span 
+              :class="[
+                'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
+                reminderStore.remind1DayBefore ? 'left-7' : 'left-1'
+              ]"
+            ></span>
+          </button>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600">提前3天提醒</span>
+          <button 
+            @click="reminderStore.updateSettings({ remind3DaysBefore: !reminderStore.remind3DaysBefore })"
+            :class="[
+              'w-12 h-6 rounded-full transition-colors relative',
+              reminderStore.remind3DaysBefore ? 'bg-gray-800' : 'bg-gray-300'
+            ]"
+          >
+            <span 
+              :class="[
+                'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
+                reminderStore.remind3DaysBefore ? 'left-7' : 'left-1'
+              ]"
+            ></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="usage-stats mt-10 p-5 bg-gray-50 rounded-xl">
       <h3 class="font-semibold mb-4">{{ t('profile.usageStats') }}</h3>
       <div class="space-y-3">
@@ -121,10 +178,12 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useUserStore } from '../stores/user'
+import { useReminderStore } from '../stores/reminder'
 
 const { t } = useI18n()
 const router = useRouter()
 const userStore = useUserStore()
+const reminderStore = useReminderStore()
 
 const showEditInfo = ref(false)
 
