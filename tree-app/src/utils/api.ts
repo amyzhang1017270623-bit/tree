@@ -1,10 +1,20 @@
 const API_KEY = 'sk-3ea880e116f0438e926d0c99e47e8674'
 
+const isProduction = import.meta.env.PROD
+
 const ENDPOINTS = {
-  cn: '/api-cn',
-  global: '/api-global',
-  multiCn: '/api-multi-cn',
-  multiGlobal: '/api-multi-global'
+  cn: isProduction 
+    ? 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation'
+    : '/api-cn',
+  global: isProduction
+    ? 'https://dashscope-us.aliyuncs.com/api/v1/services/aigc/text-generation/generation'
+    : '/api-global',
+  multiCn: isProduction
+    ? 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation'
+    : '/api-multi-cn',
+  multiGlobal: isProduction
+    ? 'https://dashscope-us.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation'
+    : '/api-multi-global'
 }
 
 export interface ChatMessage {
