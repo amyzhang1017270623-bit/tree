@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useReminderStore } from '@/stores/reminder'
 import { useUserStore } from '@/stores/user'
 import { callQwenAPI, analyzeVoice } from '@/utils/api'
 
 const router = useRouter()
+const { t } = useI18n()
 const reminderStore = useReminderStore()
 const userStore = useUserStore()
 
@@ -123,6 +125,38 @@ const detectDateInText = (input: string): { date: string; title: string } | null
   let title = ''
 
   const cleanInput = input.replace(/[，,。]/g, '').replace(/\u00A0/g, ' ').replace(/\u3000/g, ' ')
+  
+  // 日程意图关键词：明确表示要添加提醒/日程
+  const reminderIntents = [
+    '提醒', '记得', '提醒我', '帮我记', '日程', '安排', '别忘了', '提醒我',
+    '记一下', '记录', '待办', 'todo', 'to-do', '备忘', '设个提醒', '日程提醒',
+    '提醒事项', '定个', '预约', '订', '约了', '会议', '约会', '有事',
+    '要去', '要参加', '要见', '要买', '要吃', '要喝', '要做', '要做', '要开会'
+  ]
+  
+  // 闲聊模式关键词：只是随口说说，不应该触发提醒
+  const chatPatterns = [
+    '天气', '心情', '不错', '很好', '真好', '还好', '好久', '什么', '怎么',
+    '为什么', '怎么办', '为什么', '怎样', '感觉', '觉得', '今天想', '今天要',
+    '今天去', '今天见', '今天买', '今天吃', '今天喝', '今天玩', '今天做'
+  ]
+  
+  const hasReminderIntent = reminderIntents.some(keyword => cleanInput.includes(keyword))
+  const hasChatPattern = chatPatterns.some(pattern => cleanInput.includes(pattern))
+  
+  // 只有当输入超过3个字且包含日程意图关键词时，才检测日期
+  if (cleanInput.length <= 3 || !hasReminderIntent) {
+    return null
+  }
+  
+  // 如果有明确的日程意图，但同时有闲聊模式关键词，需要更严格的判断
+  if (hasReminderIntent && hasChatPattern) {
+    // 只有当日程意图关键词在闲聊模式关键词之前出现，或者包含明确的日程词时才触发
+    const hasStrongReminderIntent = reminderIntents.slice(0, 8).some(keyword => cleanInput.includes(keyword))
+    if (!hasStrongReminderIntent) {
+      return null
+    }
+  }
   
   const spaceChars = '[\\s\\u3000\\u00A0]*'
   
@@ -364,8 +398,9 @@ const sendMessage = async () => {
 
   const parsedDate = detectDateInText(text)
   console.log('[Date Detection] Input:', text)
-  console.log('[Date Detection] Result:', parsedDate)
+  console.log('[Date Detection] Intent check passed:', parsedDate !== null)
   if (parsedDate) {
+    console.log('[Date Detection] Detected date:', parsedDate.date, 'Title:', parsedDate.title)
     console.log('[Date Detection] Showing confirmation modal')
     pendingReminder.value = parsedDate
     editReminderTitle.value = parsedDate.title
@@ -635,8 +670,14 @@ const cancelAddReminder = () => {
 
 const clearAllReminders = () => {
   if (confirm('确定要清空所有日程吗？')) {
-    reminderStore.reminders = []
+    reminderStore.clearAllReminders()
   }
+}
+
+const handleKeyboardResize = () => {
+  setTimeout(() => {
+    scrollToBottom()
+  }, 100)
 }
 
 onMounted(() => {
@@ -646,32 +687,39 @@ onMounted(() => {
     isUser: false,
     timestamp: Date.now()
   })
+  window.addEventListener('resize', handleKeyboardResize)
+  window.addEventListener('orientationchange', handleKeyboardResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleKeyboardResize)
+  window.removeEventListener('orientationchange', handleKeyboardResize)
 })
 </script>
 
 <template>
-  <div class="assistant-container flex flex-col min-h-screen bg-white">
+  <div class="assistant-container h-screen bg-white flex flex-col overflow-hidden">
     <!-- Header -->
-    <div class="header px-6 py-4 flex items-center justify-between border-b border-gray-100">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white px-6 pt-6 pb-4 flex items-center justify-between border-b border-gray-100">
       <button @click="router.back()" class="mr-4">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
       </button>
       <div class="text-center">
-        <h1 class="text-lg font-semibold">私人助理</h1>
-        <p class="text-xs text-gray-500">随时为您服务</p>
+        <h1 class="text-lg font-semibold">{{ t('assistant.title') }}</h1>
+        <p class="text-xs text-gray-500">{{ t('assistant.subtitle') }}</p>
       </div>
       <button 
         @click="showReminderModal = true"
         class="text-xs text-gray-500 hover:text-gray-700 transition-colors"
       >
-        全部日程
+        {{ t('assistant.allReminders') }}
       </button>
-    </div>
+    </header>
 
     <!-- Messages -->
-    <div class="messages flex-1 px-6 py-4 space-y-4 relative overflow-y-auto">
+    <div class="messages flex-1 px-6 pt-24 pb-4 space-y-4 relative overflow-y-auto">
       <div 
         v-for="(msg, idx) in messages" 
         :key="idx" 
@@ -720,12 +768,12 @@ onMounted(() => {
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <span>思考中...</span>
+        <span>{{ t('assistant.thinking') }}</span>
       </div>
     </div>
 
     <!-- Input Area -->
-    <div class="input-area px-6 py-4 border-t border-gray-100">
+    <div class="input-area flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-white">
       <div class="flex items-center gap-3">
         <!-- 左侧：语音和输入框的切换按钮 -->
         <button 
@@ -747,7 +795,7 @@ onMounted(() => {
             @keyup.enter="sendMessage"
             type="text"
             class="w-full px-4 py-3 bg-gray-100 rounded-full focus:outline-none"
-            placeholder="输入问题或设置提醒（如：6月1日生日）"
+            :placeholder="t('assistant.placeholder')"
           />
           <button 
             v-else
@@ -765,7 +813,7 @@ onMounted(() => {
               <span class="wave-bar"></span>
               <span class="wave-bar"></span>
             </div>
-            <span>{{ isRecording ? '点击结束录音' : '点击开始录音' }}</span>
+            <span>{{ isRecording ? t('assistant.stopRecording') : t('assistant.startRecording') }}</span>
           </button>
         </div>
         
@@ -790,7 +838,7 @@ onMounted(() => {
     <div v-if="showReminderModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-2xl w-full max-w-sm max-h-[70vh] overflow-hidden">
         <div class="border-b border-gray-200 px-4 py-4 flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gray-800">全部日程</h2>
+          <h2 class="text-lg font-semibold text-gray-800">{{ t('assistant.allReminders') }}</h2>
           <button 
             @click="showReminderModal = false"
             class="text-gray-400 hover:text-gray-800 transition-colors"
@@ -803,7 +851,7 @@ onMounted(() => {
 
         <div class="p-4 overflow-y-auto max-h-[50vh]">
           <div v-if="reminderStore.upcomingReminders.length === 0" class="text-center text-gray-400 py-8">
-            暂无日程
+            {{ t('assistant.noReminders') }}
           </div>
           <div v-else class="space-y-3">
             <div 

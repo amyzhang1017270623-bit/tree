@@ -1,19 +1,21 @@
 <template>
-  <div class="tree-hole-container flex flex-col min-h-screen bg-white">
-    <div class="header px-6 py-4 flex items-center justify-between border-b border-gray-100">
-      <button @click="goBack" class="mr-4">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-      </button>
-      <div class="text-center">
-        <h1 class="text-lg font-semibold">{{ t('treeHole.title') }}</h1>
-        <p class="text-xs text-gray-500">{{ t('treeHole.subtitle') }}</p>
+  <div class="tree-hole-container flex flex-col h-screen bg-white">
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <button @click="goBack" class="w-8 h-8 flex items-center justify-center">
+          <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <div class="text-center">
+          <h1 class="text-lg font-semibold">{{ t('treeHole.title') }}</h1>
+          <p class="text-xs text-gray-500">{{ t('treeHole.subtitle') }}</p>
+        </div>
+        <div class="w-8"></div>
       </div>
-      <div class="w-10"></div>
-    </div>
+    </header>
 
-    <div class="messages flex-1 px-6 py-4 space-y-4 relative">
+    <div class="messages flex-1 px-6 py-4 space-y-4 relative overflow-auto">
       <div v-if="messages.length === 0" class="empty-state absolute inset-0 flex flex-col items-center justify-center">
         <img 
           :src="guideIcon" 
@@ -64,7 +66,7 @@
       </div>
     </div>
 
-    <div class="input-area px-6 py-4 border-t border-gray-100">
+    <div class="input-area px-6 py-4 border-t border-gray-100 flex-shrink-0">
       <div class="flex items-center gap-3">
         <!-- 左侧：语音和输入框的切换按钮 -->
         <button 
@@ -145,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useUserStore } from '../stores/user'
@@ -566,6 +568,18 @@ const goBack = () => {
   router.push('/home')
 }
 
+// 键盘弹出适配
+const handleKeyboardResize = () => {
+  setTimeout(() => {
+    scrollToBottom()
+  }, 100)
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleKeyboardResize)
+  window.addEventListener('orientationchange', handleKeyboardResize)
+})
+
 onUnmounted(() => {
   messages.value = []
   // 清理语音识别
@@ -576,6 +590,9 @@ onUnmounted(() => {
       // 忽略清理错误
     }
   }
+  // 清理事件监听
+  window.removeEventListener('resize', handleKeyboardResize)
+  window.removeEventListener('orientationchange', handleKeyboardResize)
 })
 </script>
 

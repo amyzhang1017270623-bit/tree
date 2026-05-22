@@ -1,35 +1,53 @@
 <template>
-  <div class="emotion-companion-container min-h-screen bg-white flex flex-col">
+  <div class="emotion-companion-container h-screen bg-white flex flex-col">
     <!-- 顶部导航 -->
-    <div class="px-6 py-4 flex items-center justify-between border-b border-gray-100">
-      <button @click="goBack" class="mr-4">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-      </button>
-      <h1 class="text-xl font-bold">{{ t('emotionCompanion.title') }}</h1>
-      <div class="w-10"></div>
-    </div>
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4 flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <button @click="goBack" class="w-8 h-8 flex items-center justify-center">
+          <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <h1 class="text-xl font-bold">{{ t('emotionCompanion.title') }}</h1>
+        <div class="w-8"></div>
+      </div>
+    </header>
 
-    <!-- 角色选择列表（始终显示） -->
-    <div class="px-6 py-4 border-b border-gray-100">
-      <div class="grid grid-cols-3 gap-3">
-        <div 
-          v-for="char in characters" 
-          :key="char.id"
-          @click="selectCharacter(char)"
-          class="p-3 border rounded-xl cursor-pointer transition-all text-center"
-          :class="[
-            selectedCharacter?.id === char.id
-              ? 'border-black bg-black text-white'
-              : 'border-gray-200 hover:border-gray-400'
-          ]"
-        >
-          <div class="flex items-center justify-center">
-            <span class="text-2xl mr-2">{{ char.avatar }}</span>
-            <span class="text-sm" :class="selectedCharacter?.id === char.id ? 'text-white' : 'text-gray-700'">{{ t(char.nameKey) }}</span>
+    <!-- 角色选择和介绍区域（固定不动） -->
+    <div class="sticky top-[60px] z-40 bg-white border-b border-gray-100 flex-shrink-0">
+      <!-- 角色选择列表 -->
+      <div class="px-6 py-3">
+        <div class="grid grid-cols-3 gap-3">
+          <div 
+            v-for="char in characters" 
+            :key="char.id"
+            @click="selectCharacter(char)"
+            class="py-2 px-3 border rounded-xl cursor-pointer transition-all text-center"
+            :class="[
+              selectedCharacter?.id === char.id
+                ? 'border-black bg-black text-white'
+                : 'border-gray-200 hover:border-gray-400'
+            ]"
+          >
+            <div class="flex items-center justify-center">
+              <span class="text-xl mr-2">{{ char.avatar }}</span>
+              <span class="text-sm" :class="selectedCharacter?.id === char.id ? 'text-white' : 'text-gray-700'">{{ t(char.nameKey) }}</span>
+            </div>
           </div>
         </div>
+      </div>
+      <!-- 角色介绍 -->
+      <div class="bg-white px-6 py-3 flex items-center border-t border-gray-100">
+        <template v-if="selectedCharacter">
+          <span class="text-xl mr-3">{{ selectedCharacter.avatar }}</span>
+          <div>
+            <span class="text-base font-semibold">{{ t(selectedCharacter.nameKey) }}</span>
+            <p class="text-xs text-gray-500">{{ t(selectedCharacter.descriptionKey) }}</p>
+          </div>
+        </template>
+        <template v-else>
+          <span class="text-gray-400">{{ t('emotionCompanion.pleaseSelectCharacter') }}</span>
+        </template>
       </div>
     </div>
 
@@ -75,17 +93,8 @@
     </div>
 
     <!-- 聊天区域 -->
-    <div v-else class="chat-container flex-1 flex flex-col">
-      <!-- 聊天头部 -->
-      <div class="px-6 py-3 flex items-center border-b border-gray-100">
-        <span class="text-2xl mr-3">{{ selectedCharacter?.avatar || '👧' }}</span>
-        <div>
-          <span class="text-lg font-semibold">{{ t(selectedCharacter?.nameKey || 'characters.xiaoWei') }}</span>
-          <p class="text-xs text-gray-500">{{ t(selectedCharacter?.descriptionKey || 'characters.virtualLove') }}</p>
-        </div>
-      </div>
-
-      <!-- 消息列表 -->
+    <div v-else class="chat-container flex-1 flex flex-col overflow-hidden">
+      <!-- 消息列表（滚动区域） -->
       <div class="chat-messages flex-1 overflow-auto px-6 py-4 space-y-4">
         <div v-for="(msg, idx) in messages" :key="idx" :class="['message', msg.isUser ? 'user-message' : 'bot-message']">
           <div class="message-bubble" :class="msg.isUser ? 'user' : 'bot'">
@@ -94,11 +103,12 @@
         </div>
       </div>
 
-      <!-- 输入框 -->
-      <div class="chat-input px-6 py-4 border-t border-gray-100">
+      <!-- 输入框（固定在底部） -->
+      <div class="chat-input px-6 py-4 border-t border-gray-100 flex-shrink-0">
         <div class="flex gap-3">
           <input 
             v-model="messageInput"
+            @focus="handleInputFocus"
             @keyup.enter="sendMessage"
             type="text"
             class="flex-1 px-4 py-3 bg-gray-100 rounded-full focus:outline-none"
@@ -115,11 +125,30 @@
         </div>
       </div>
     </div>
+
+    <!-- 提示弹窗 -->
+    <div v-if="showAlertModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click="closeAlertModal">
+      <div class="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full text-center" @click.stop>
+        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">{{ t('emotionCompanion.pleaseSelectCharacter') }}</h3>
+        <p class="text-gray-500 mb-4">{{ t('emotionCompanion.selectCharacterFirst') }}</p>
+        <button 
+          @click="closeAlertModal"
+          class="w-full py-3 bg-black text-white rounded-full hover:bg-gray-800"
+        >
+          {{ t('general.confirm') }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, nextTick } from 'vue'
+import { ref, reactive, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useUserStore, type ChatMessage } from '../stores/user'
@@ -179,6 +208,7 @@ const messages = ref<ChatMessage[]>([
   { id: 'init', text: `${t('emotionCompanion.greeting')}${t('characters.xiaoWei')}，${t('emotionCompanion.niceToMeetYou')}`, isUser: false, timestamp: Date.now() }
 ])
 const messageInput = ref('')
+const showAlertModal = ref(false)
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -297,7 +327,21 @@ const handleSurveyNext = () => {
   }
 }
 
+const handleInputFocus = () => {
+  if (!selectedCharacter.value) {
+    showAlertModal.value = true
+  }
+}
+
+const closeAlertModal = () => {
+  showAlertModal.value = false
+}
+
 const sendMessage = async () => {
+  if (!selectedCharacter.value) {
+    showAlertModal.value = true
+    return
+  }
   if (!messageInput.value.trim()) return
   
   const userText = messageInput.value
@@ -361,6 +405,23 @@ const sendMessage = async () => {
 }
 
 const goBack = () => router.push('/home')
+
+// 键盘弹出适配
+const handleKeyboardResize = () => {
+  setTimeout(() => {
+    scrollToBottom()
+  }, 100)
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleKeyboardResize)
+  window.addEventListener('orientationchange', handleKeyboardResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleKeyboardResize)
+  window.removeEventListener('orientationchange', handleKeyboardResize)
+})
 </script>
 
 <style scoped>

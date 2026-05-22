@@ -1,14 +1,18 @@
 <template>
-  <div class="profile-container min-h-screen bg-white px-6 py-8">
-    <div class="header flex justify-between items-center mb-10">
-      <button @click="goBack">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-      </button>
-      <h1 class="text-xl font-bold">{{ t('profile.title') }}</h1>
-      <div class="w-6"></div>
-    </div>
+  <div class="profile-container min-h-screen bg-white">
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <button @click="goBack" class="w-8 h-8 flex items-center justify-center">
+          <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <h1 class="text-xl font-bold">{{ t('profile.title') }}</h1>
+        <div class="w-8"></div>
+      </div>
+    </header>
+
+    <div class="px-6 py-8">
 
     <div class="profile-info mb-10">
       <div class="user-avatar w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -59,12 +63,12 @@
     </div>
 
     <div class="reminder-settings mt-10 p-5 bg-gray-50 rounded-xl">
-      <h3 class="font-semibold mb-4">提醒设置</h3>
+      <h3 class="font-semibold mb-4">{{ t('profile.reminderSettings') }}</h3>
       <div class="space-y-4">
         <div class="flex items-center justify-between">
-          <span class="text-gray-600">当天提醒</span>
+          <span class="text-gray-600">{{ t('profile.remindDayOf') }}</span>
           <button 
-            @click="reminderStore.updateSettings({ remindDayOf: !reminderStore.remindDayOf })"
+            @click="setReminderMode('dayOf')"
             :class="[
               'w-12 h-6 rounded-full transition-colors relative',
               reminderStore.remindDayOf ? 'bg-gray-800' : 'bg-gray-300'
@@ -79,9 +83,9 @@
           </button>
         </div>
         <div class="flex items-center justify-between">
-          <span class="text-gray-600">提前1天提醒</span>
+          <span class="text-gray-600">{{ t('profile.remind1DayBefore') }}</span>
           <button 
-            @click="reminderStore.updateSettings({ remind1DayBefore: !reminderStore.remind1DayBefore })"
+            @click="setReminderMode('1DayBefore')"
             :class="[
               'w-12 h-6 rounded-full transition-colors relative',
               reminderStore.remind1DayBefore ? 'bg-gray-800' : 'bg-gray-300'
@@ -96,9 +100,9 @@
           </button>
         </div>
         <div class="flex items-center justify-between">
-          <span class="text-gray-600">提前3天提醒</span>
+          <span class="text-gray-600">{{ t('profile.remind3DaysBefore') }}</span>
           <button 
-            @click="reminderStore.updateSettings({ remind3DaysBefore: !reminderStore.remind3DaysBefore })"
+            @click="setReminderMode('3DaysBefore')"
             :class="[
               'w-12 h-6 rounded-full transition-colors relative',
               reminderStore.remind3DaysBefore ? 'bg-gray-800' : 'bg-gray-300'
@@ -135,6 +139,7 @@
           <span class="text-gray-800">{{ userStore.usageStats.tarot }} {{ t('profile.times') }}</span>
         </div>
       </div>
+    </div>
     </div>
 
     <div v-if="showEditInfo" class="edit-modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
@@ -215,4 +220,12 @@ const goToMembership = () => {
 }
 
 const goBack = () => router.push('/home')
+
+const setReminderMode = (mode: 'dayOf' | '1DayBefore' | '3DaysBefore') => {
+  reminderStore.updateSettings({
+    remindDayOf: mode === 'dayOf',
+    remind1DayBefore: mode === '1DayBefore',
+    remind3DaysBefore: mode === '3DaysBefore'
+  })
+}
 </script>

@@ -12,4 +12,10 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   background-color: #ffffff;
   color: #000000;
+  overscroll-behavior: contain;
+}
+
+html {
+  overscroll-behavior: none;
+  touch-action: pan-y pinch-zoom;
 }

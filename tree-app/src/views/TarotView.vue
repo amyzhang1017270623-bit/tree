@@ -1,9 +1,9 @@
 <template>
   <div class="tarot-container min-h-screen bg-white">
-    <div v-if="!showCardsList && !showResult" class="main-section px-6 py-8">
-      <div class="flex items-center justify-between mb-4">
-        <button @click="goBack" class="flex items-center text-black">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <header v-if="!showCardsList && !showResult" class="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <button @click="goBack" class="w-8 h-8 flex items-center justify-center">
+          <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
           </svg>
         </button>
@@ -11,10 +11,13 @@
           <h1 class="text-xl font-bold">{{ t('tarot.title') }}</h1>
           <p class="text-xs text-gray-500 mt-1">{{ t('tarot.subtitle') }}</p>
         </div>
-        <button @click="showCardsList = true" class="text-sm text-gray-600 hover:text-black">
+        <button @click="showCardsList = true" class="text-xs text-gray-600 hover:text-black whitespace-nowrap">
           {{ t('tarot.tarotCardGuide') }}
         </button>
       </div>
+    </header>
+
+    <div v-if="!showCardsList && !showResult" class="main-section px-6 py-6">
 
       <div class="text-center mb-4">
         <div class="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
@@ -175,56 +178,64 @@
       </div>
     </div>
 
-    <div v-else-if="showCardsList" class="cards-list-section min-h-screen px-6 py-8">
-      <div class="flex justify-between items-center mb-8">
-        <button @click="showCardsList = false" class="flex items-center text-black">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-          </svg>
-        </button>
-        <h1 class="text-xl font-bold">{{ t('tarot.tarotCardGuide') }}</h1>
-        <div class="w-16"></div>
+    <div v-else-if="showCardsList" class="cards-list-section h-screen flex flex-col bg-white">
+      <header class="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4 flex-shrink-0">
+        <div class="flex justify-between items-center">
+          <button @click="showCardsList = false" class="w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          <h1 class="text-xl font-bold">{{ t('tarot.tarotCardGuide') }}</h1>
+          <div class="w-8"></div>
+        </div>
+      </header>
+
+      <div class="sticky top-[60px] z-40 bg-white border-b border-gray-100 px-6 py-3 flex-shrink-0">
+        <div class="category-select flex gap-2 overflow-x-auto pb-1">
+          <button 
+            v-for="cat in categories" 
+            :key="cat.value"
+            @click="selectedCategory = cat.value"
+            :class="[
+              'px-4 py-2 rounded-full text-sm flex-shrink-0 transition-colors',
+              selectedCategory === cat.value 
+                ? 'bg-black text-white' 
+                : 'bg-white text-black border border-gray-300'
+            ]"
+          >
+            {{ t(`tarot.${cat.label}`) }}
+          </button>
+        </div>
       </div>
 
-      <div class="category-select mb-6 flex gap-2 overflow-x-auto pb-2">
-        <button 
-          v-for="cat in categories" 
-          :key="cat.value"
-          @click="selectedCategory = cat.value"
-          :class="[
-            'px-4 py-2 rounded-full text-sm flex-shrink-0 transition-colors',
-            selectedCategory === cat.value 
-              ? 'bg-black text-white' 
-              : 'bg-white text-black border border-gray-300'
-          ]"
-        >
-          {{ t(`tarot.${cat.label}`) }}
-        </button>
-      </div>
-
-      <div class="cards-grid grid grid-cols-3 gap-4">
-        <div 
-          v-for="card in filteredCards" 
-          :key="card.id"
-          @click="viewCardDetail(card)"
-          class="card-item bg-gray-50 rounded-xl p-3 text-center cursor-pointer hover:bg-gray-100"
-        >
-          <img :src="getCardImage(card.image)" :alt="card.name" class="w-full aspect-[3/4] object-contain mb-2" />
-          <p class="font-medium text-xs">{{ card.name }}</p>
+      <div class="flex-1 overflow-auto px-6 py-4">
+        <div class="cards-grid grid grid-cols-3 gap-4">
+          <div 
+            v-for="card in filteredCards" 
+            :key="card.id"
+            @click="viewCardDetail(card)"
+            class="card-item bg-gray-50 rounded-xl p-3 text-center cursor-pointer hover:bg-gray-100"
+          >
+            <img :src="getCardImage(card.image)" :alt="card.name" class="w-full aspect-[3/4] object-contain mb-2" />
+            <p class="font-medium text-xs">{{ card.name }}</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <div v-else-if="showResult" class="result-section h-screen flex flex-col px-6 py-8 overflow-hidden">
-      <div class="flex items-center justify-between mb-8 flex-shrink-0">
-        <button @click="resetReading" class="flex items-center text-black">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-          </svg>
-        </button>
-        <h1 class="text-xl font-bold">{{ t('tarot.readingResult') }}</h1>
-        <div class="w-16"></div>
-      </div>
+    <div v-else-if="showResult" class="result-section h-screen flex flex-col bg-white">
+      <header class="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4 flex-shrink-0">
+        <div class="flex items-center justify-between">
+          <button @click="resetReading" class="w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          <h1 class="text-xl font-bold">{{ t('tarot.readingResult') }}</h1>
+          <div class="w-8"></div>
+        </div>
+      </header>
 
       <div class="flex-1 overflow-y-auto">
         <div v-if="selectedSpread === 'single'" class="single-result">

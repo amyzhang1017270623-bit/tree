@@ -162,6 +162,8 @@ export default {
     listening: '嗯嗯，我在听着呢~',
     understandFeelings: '我理解你的感受',
     wantToTalk: '你想聊聊什么呢？',
+    pleaseSelectCharacter: '请先选择角色',
+    selectCharacterFirst: '请先选择一个陪伴角色开始对话',
     willAlwaysAccompany: '我会一直陪着你的',
     defaultWelcome: '嗨，我是{name}，很高兴认识你~'
   },
@@ -353,7 +355,11 @@ export default {
     user: '用户',
     male: '男',
     female: '女',
-    preferNotToSay: '不愿透露'
+    preferNotToSay: '不愿透露',
+    reminderSettings: '提醒设置',
+    remindDayOf: '当天提醒',
+    remind1DayBefore: '提前1天提醒',
+    remind3DaysBefore: '提前3天提醒'
   },
   register: {
     title: '完善你的信息',
@@ -414,7 +420,22 @@ export default {
     characterTextFemale: '聊了这么久了，送我一杯啤酒吧！',
     characterTextMale: '聊了这么久了，送我一杯奶茶吧！',
     comingSoon: '会员功能开发中，敬请期待！',
+    vipFeature: '会员功能',
     emotionCompanion: '情感陪伴',
-    treeHole: '树洞对话'
+    treeHole: '树洞对话',
+    purchaseSuccess: '购买成功',
+    confirm: '确认'
+  },
+  assistant: {
+    title: '私人助理',
+    subtitle: '随时为您服务',
+    allReminders: '全部日程',
+    placeholder: '输入问题或设置提醒（如：6月1日生日）',
+    startRecording: '点击开始录音',
+    stopRecording: '点击结束录音',
+    thinking: '思考中...',
+    noReminders: '暂无日程',
+    voiceMessage: '语音消息',
+    recognizedText: '识别文字'
   }
 }

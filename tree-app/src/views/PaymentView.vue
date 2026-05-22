@@ -1,14 +1,18 @@
 <template>
-  <div class="payment-container min-h-screen bg-white px-6 py-8">
-    <div class="flex justify-between items-center mb-8">
-      <button @click="goBack" class="flex items-center text-black">
-        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-      </button>
-      <h1 class="text-xl font-bold">{{ t('payment.title') }}</h1>
-      <div class="w-6"></div>
-    </div>
+  <div class="payment-container min-h-screen bg-white">
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <button @click="goBack" class="w-8 h-8 flex items-center justify-center">
+          <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <h1 class="text-xl font-bold">{{ t('payment.title') }}</h1>
+        <div class="w-8"></div>
+      </div>
+    </header>
+
+    <div class="px-6 py-8">
 
     <div class="character text-center mb-8">
       <div class="text-6xl mb-4">{{ characterAvatar }}</div>
@@ -89,6 +93,63 @@
     >
       {{ t('payment.subscribe') }}
     </button>
+    </div>
+  </div>
+
+  <!-- 购买成功弹窗 -->
+  <div 
+    v-if="showSuccessModal" 
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    @click.self="closeSuccessModal"
+  >
+    <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
+      <div class="px-6 py-6 text-center">
+        <div class="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ t('payment.purchaseSuccess') }}</h3>
+        <p class="text-gray-500">{{ t('payment.buySuccess', { count: boughtCount }) }}</p>
+      </div>
+      
+      <div class="px-6 pb-6">
+        <button 
+          @click="closeSuccessModal"
+          class="w-full py-3 bg-black text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
+        >
+          {{ t('payment.confirm') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 购买会员弹窗 -->
+  <div 
+    v-if="showPaymentModal" 
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    @click.self="closePaymentModal"
+  >
+    <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
+      <div class="px-6 py-6 text-center">
+        <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+          <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ t('payment.vipFeature') }}</h3>
+        <p class="text-gray-500">{{ t('payment.comingSoon') }}</p>
+      </div>
+      
+      <div class="px-6 pb-6">
+        <button 
+          @click="closePaymentModal"
+          class="w-full py-3 bg-black text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
+        >
+          {{ t('payment.confirm') }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -116,6 +177,9 @@ const tarotCards: TarotCard[] = [
 ]
 
 const selectedTarotCard = ref<TarotCard | null>(null)
+const showSuccessModal = ref(false)
+const showPaymentModal = ref(false)
+const boughtCount = ref(0)
 
 const characterAvatar = computed(() => {
   return userStore.userInfo?.gender === '女' ? '👦' : '👧'
@@ -135,13 +199,22 @@ const buyTarotCard = () => {
   if (!selectedTarotCard.value) return
   
   // 模拟购买成功
-  userStore.buyTarotCards(selectedTarotCard.value.count)
-  alert(t('payment.buySuccess', { count: selectedTarotCard.value.count }))
-  router.push('/tarot')
+  boughtCount.value = selectedTarotCard.value.count
+  userStore.buyTarotCards(boughtCount.value)
+  showSuccessModal.value = true
 }
 
 const handlePayment = () => {
-  alert(t('payment.comingSoon'))
+  showPaymentModal.value = true
+}
+
+const closeSuccessModal = () => {
+  showSuccessModal.value = false
+  router.push('/tarot')
+}
+
+const closePaymentModal = () => {
+  showPaymentModal.value = false
 }
 
 const goBack = () => router.push('/home')

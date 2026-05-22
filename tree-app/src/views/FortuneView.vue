@@ -1,14 +1,17 @@
 <template>
   <div class="fortune-container min-h-screen bg-white">
-    <div class="px-6 py-4 flex items-center justify-between border-b border-gray-100">
-      <button @click="goBack" class="flex items-center text-black">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-      </button>
-      <h1 class="text-xl font-bold">{{ t('fortune.title') }}</h1>
-      <div class="w-20"></div>
-    </div>
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <button @click="goBack" class="w-8 h-8 flex items-center justify-center">
+          <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <h1 class="text-xl font-bold">{{ t('fortune.title') }}</h1>
+        <div class="w-8"></div>
+      </div>
+    </header>
+
     <div class="px-6 py-8">
 
     <div class="fortune-header text-center mb-10">

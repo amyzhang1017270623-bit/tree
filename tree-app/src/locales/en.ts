@@ -162,6 +162,8 @@ export default {
     listening: 'Hmm, I\'m listening~',
     understandFeelings: 'I understand how you feel',
     wantToTalk: 'What do you want to talk about?',
+    pleaseSelectCharacter: 'Please select a character',
+    selectCharacterFirst: 'Please select a companion character to start the conversation',
     willAlwaysAccompany: 'I will always be with you',
     defaultWelcome: 'Hi, I am {name}, nice to meet you~'
   },
@@ -352,7 +354,11 @@ export default {
     user: 'User',
     male: 'Male',
     female: 'Female',
-    preferNotToSay: 'Prefer not to say'
+    preferNotToSay: 'Prefer not to say',
+    reminderSettings: 'Reminder Settings',
+    remindDayOf: 'Remind on day',
+    remind1DayBefore: 'Remind 1 day before',
+    remind3DaysBefore: 'Remind 3 days before'
   },
   register: {
     title: 'Complete your info',
@@ -413,7 +419,22 @@ export default {
     characterTextFemale: 'We\'ve chatted for so long, buy me a beer!',
     characterTextMale: 'We\'ve chatted for so long, buy me a milk tea!',
     comingSoon: 'VIP feature coming soon, stay tuned!',
+    vipFeature: 'VIP Feature',
     emotionCompanion: 'Emotion Companion',
-    treeHole: 'Tree Hole'
+    treeHole: 'Tree Hole',
+    purchaseSuccess: 'Purchase Successful',
+    confirm: 'Confirm'
+  },
+  assistant: {
+    title: 'Personal Assistant',
+    subtitle: 'At your service',
+    allReminders: 'All Reminders',
+    placeholder: 'Type a question or set a reminder (e.g., Birthday on June 1st)',
+    startRecording: 'Click to start recording',
+    stopRecording: 'Click to stop recording',
+    thinking: 'Thinking...',
+    noReminders: 'No reminders',
+    voiceMessage: 'Voice Message',
+    recognizedText: 'Recognized Text'
   }
 }

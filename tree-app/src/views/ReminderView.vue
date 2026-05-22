@@ -56,13 +56,13 @@ const getDaysUntil = (dateString: string): number => {
 <template>
   <div class="min-h-screen bg-white">
     <!-- Header -->
-    <header class="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
       <button @click="router.back()" class="w-8 h-8 flex items-center justify-center">
         <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <h1 class="text-lg font-light text-gray-800">日程列表</h1>
+      <h1 class="text-lg font-semibold text-gray-800">日程列表</h1>
       <div class="w-8"></div>
     </header>
 

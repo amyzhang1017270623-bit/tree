@@ -1,10 +1,18 @@
 <template>
-  <div class="tarot-detail-container min-h-screen bg-white px-6 py-8">
-    <button @click="goBack" class="mb-8 flex items-center text-black">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-      </svg>
-    </button>
+  <div class="tarot-detail-container min-h-screen bg-white">
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <button @click="goBack" class="w-8 h-8 flex items-center justify-center">
+          <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <h1 class="text-lg font-semibold text-gray-800">塔罗牌详情</h1>
+        <div class="w-8"></div>
+      </div>
+    </header>
+
+    <div class="px-6 py-8">
 
     <div v-if="card" class="card-detail">
       <div class="card-display bg-gray-50 rounded-2xl p-8 text-center mb-8">
@@ -43,6 +51,7 @@
 
     <div v-else class="text-center py-20">
       <p class="text-gray-400">{{ t('tarot.cardNotFound') }}</p>
+    </div>
     </div>
   </div>
 </template>

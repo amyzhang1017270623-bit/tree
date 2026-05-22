@@ -1,17 +1,19 @@
 <template>
   <div class="register-container min-h-screen bg-white">
-    <div class="px-6 py-4 flex items-center justify-between border-b border-gray-100">
-      <button @click="goBack" class="flex items-center text-black">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-      </button>
-      <div class="text-center">
-        <h1 class="text-xl font-bold">完善你的信息</h1>
-        <p class="text-xs text-gray-400">Complete your info</p>
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <button @click="goBack" class="w-8 h-8 flex items-center justify-center">
+          <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <div class="text-center">
+          <h1 class="text-xl font-bold">完善你的信息</h1>
+          <p class="text-xs text-gray-400">Complete your info</p>
+        </div>
+        <div class="w-8"></div>
       </div>
-      <div class="w-8"></div>
-    </div>
+    </header>
 
     <div class="register-form px-6 py-8">
 
@@ -20,6 +22,8 @@
         <input 
           v-model="form.name"
           type="text"
+          autocomplete="name"
+          inputmode="text"
           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-black"
           placeholder="请输入你的姓名 / Enter your name"
         />
@@ -72,7 +76,8 @@
         <input 
           v-model="form.birthDate"
           type="date"
-          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-black"
+          inputmode="none"
+          class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:outline-none focus:border-black"
         />
       </div>
 
@@ -80,7 +85,7 @@
         <label class="block text-gray-700 mb-2">出生时辰 / Birth Time</label>
         <select 
           v-model="form.birthTime"
-          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-black"
+          class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:outline-none focus:border-black"
         >
           <option value="">请选择 / Please select</option>
           <option value="00:00-02:00">00:00-02:00</option>
@@ -103,6 +108,8 @@
         <input 
           v-model="form.phone"
           type="tel"
+          autocomplete="tel"
+          inputmode="tel"
           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-black"
           placeholder="请输入手机号 / Enter phone number"
         />
@@ -155,3 +162,18 @@ const handleRegister = () => {
   router.push('/home')
 }
 </script>
+
+<style scoped>
+input[type="date"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  cursor: pointer;
+}
+</style>

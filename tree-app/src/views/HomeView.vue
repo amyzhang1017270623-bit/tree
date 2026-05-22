@@ -1,18 +1,22 @@
 <template>
-  <div class="home-container min-h-screen bg-gradient-to-b from-gray-50 to-white px-6 pt-10 pb-16 relative">
-    <div class="header flex justify-between items-center mb-8">
-      <h1 class="text-2xl font-bold text-gray-800">0号树洞</h1>
-      <div class="flex items-center gap-3">
-        <button @click="toggleLocale" class="px-3 py-1.5 text-sm border border-gray-300 rounded-full hover:border-gray-400 transition-colors">
-          {{ currentLocale === 'zh' ? 'EN' : '中文' }}
-        </button>
-        <button @click="goToProfile" class="w-11 h-11 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-          <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-          </svg>
-        </button>
+  <div class="home-container min-h-screen bg-gradient-to-b from-gray-50 to-white pb-16 relative">
+    <header class="sticky top-0 z-50 bg-gradient-to-b from-gray-50 to-gray-50/95 backdrop-blur-sm px-6 py-4 border-b border-gray-100">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">0号树洞</h1>
+        <div class="flex items-center gap-3">
+          <button @click="toggleLocale" class="px-3 py-1.5 text-sm border border-gray-300 rounded-full hover:border-gray-400 transition-colors">
+            {{ currentLocale === 'zh' ? 'EN' : '中文' }}
+          </button>
+          <button @click="goToProfile" class="w-11 h-11 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
+            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+          </button>
+        </div>
       </div>
-    </div>
+    </header>
+
+    <div class="px-6 py-6">
 
     <div class="fortune-section flex flex-col items-center mb-12">
       <div @click="goToFortune" class="fortune-wheel relative cursor-pointer">
@@ -101,6 +105,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
         </svg>
       </div>
+    </div>
     </div>
 
     <div 
