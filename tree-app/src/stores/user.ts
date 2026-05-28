@@ -7,6 +7,7 @@ export interface UserInfo {
   birthDate: string
   birthTime: string
   phone: string
+  password?: string
 }
 
 export interface ChatMessage {
@@ -44,6 +45,7 @@ export interface EmotionCompanionConversation {
 
 export const useUserStore = defineStore('user', () => {
   const isRegistered = ref(false)
+  const userId = ref<number | null>(null)
   const userInfo = ref<UserInfo | null>(null)
   const isFreeUser = ref(true)
   const usageStats = ref({
@@ -52,8 +54,13 @@ export const useUserStore = defineStore('user', () => {
     tarot: 0,
     loveAssistant: 0,
     assistant: 0,
+    fortune: 0,
     registerDate: Date.now()
   })
+  
+  // 登录状态管理
+  const lastLoginTime = ref<number | null>(null)
+  const LOGIN_TIMEOUT = 20 * 60 * 1000 // 20分钟超时
 
   // 塔罗相关
   const tarotFreeCount = ref(2) // 本周免费剩余次数
@@ -65,11 +72,107 @@ export const useUserStore = defineStore('user', () => {
   
   // 情感陪伴对话历史
   const emotionCompanionHistory = ref<EmotionCompanionConversation[]>([])
+  
+  // 角色偏好设置
+  const characterPreferences = ref<Record<string, string> | null>(null)
 
-  const register = (info: UserInfo) => {
-    userInfo.value = info
-    isRegistered.value = true
-    usageStats.value.registerDate = Date.now()
+  const register = async (info: UserInfo) => {
+    try {
+      const response = await fetch('/.netlify/functions/api-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(info)
+      })
+      
+      if (!response.ok) {
+        console.error('❌ 注册失败，HTTP状态:', response.status)
+        try {
+          const data = await response.json()
+          console.error('❌ 注册失败:', data.error)
+        } catch {
+          console.error('❌ 注册失败，无法解析错误信息')
+        }
+        return false
+      }
+      
+      const text = await response.text()
+      if (!text) {
+        console.error('❌ 注册失败，响应为空')
+        return false
+      }
+      
+      try {
+        const data = JSON.parse(text)
+        userId.value = data.id
+        userInfo.value = info
+        isRegistered.value = true
+        usageStats.value.registerDate = Date.now()
+        lastLoginTime.value = Date.now()
+        console.log('✅ 注册成功，用户ID:', data.id, data.message)
+        return true
+      } catch (parseError) {
+        console.error('❌ 注册失败，响应不是有效的JSON:', parseError)
+        return false
+      }
+    } catch (error) {
+      console.error('❌ 注册请求失败:', error)
+      return false
+    }
+  }
+  
+  // 登录函数
+  const login = async (phone: string, password: string) => {
+    try {
+      const response = await fetch('/.netlify/functions/api-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password })
+      })
+      const data = await response.json()
+      
+      if (response.ok) {
+        userId.value = data.id
+        userInfo.value = {
+          name: data.name,
+          gender: data.gender,
+          birthDate: data.birthDate,
+          birthTime: data.birthTime,
+          phone: data.phone
+        }
+        isRegistered.value = true
+        usageStats.value.registerDate = Date.now()
+        lastLoginTime.value = Date.now()
+        
+        if (data.characterPreferences) {
+          characterPreferences.value = data.characterPreferences
+        }
+        
+        console.log('✅ 登录成功，用户ID:', data.id, data.message)
+        return true
+      } else {
+        throw new Error(data.error || '登录失败')
+      }
+    } catch (error) {
+      console.error('❌ 登录请求失败:', error)
+      throw error
+    }
+  }
+  
+  // 检查登录状态是否过期
+  const checkLoginStatus = (): boolean => {
+    if (!lastLoginTime.value || !isRegistered.value) {
+      return false
+    }
+    
+    const now = Date.now()
+    const elapsed = now - lastLoginTime.value
+    
+    if (elapsed >= LOGIN_TIMEOUT) {
+      console.log('登录状态已过期')
+      return false
+    }
+    
+    return true
   }
 
   const updateUserInfo = (info: Partial<UserInfo>) => {
@@ -87,6 +190,7 @@ export const useUserStore = defineStore('user', () => {
       tarot: 0,
       loveAssistant: 0,
       assistant: 0,
+      fortune: 0,
       registerDate: Date.now()
     }
     tarotFreeCount.value = 2
@@ -96,8 +200,58 @@ export const useUserStore = defineStore('user', () => {
     emotionCompanionHistory.value = []
   }
 
-  const incrementUsage = (type: 'emotionCompanion' | 'treeHole' | 'tarot' | 'loveAssistant' | 'assistant') => {
+  const incrementUsage = async (type: 'emotionCompanion' | 'treeHole' | 'tarot' | 'loveAssistant' | 'assistant' | 'fortune') => {
     usageStats.value[type]++
+    if (userId.value) {
+      try {
+        await fetch('/.netlify/functions/api-update-stats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: userId.value, type })
+        })
+      } catch (error) {
+        console.error('Failed to update stats:', error)
+      }
+    }
+  }
+
+  // 保存角色偏好到数据库
+  const saveCharacterPreferences = async (preferences: Record<string, string>) => {
+    if (!userId.value) return false
+    try {
+      const response = await fetch(`/.netlify/functions/api/user-details/${userId.value}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ characterPreferences: preferences })
+      })
+      if (response.ok) {
+        characterPreferences.value = preferences
+        console.log('✅ 角色偏好保存成功')
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('❌ 角色偏好保存失败:', error)
+      return false
+    }
+  }
+
+  // 从数据库读取角色偏好
+  const loadCharacterPreferences = async (): Promise<Record<string, string> | null> => {
+    if (!userId.value) return null
+    try {
+      const response = await fetch(`/.netlify/functions/api/user-details/${userId.value}`)
+      const data = await response.json()
+      if (data.user?.character_preferences) {
+        characterPreferences.value = data.user.character_preferences
+        console.log('✅ 角色偏好读取成功:', characterPreferences.value)
+        return characterPreferences.value
+      }
+      return null
+    } catch (error) {
+      console.error('❌ 角色偏好读取失败:', error)
+      return null
+    }
   }
 
   // 检查是否需要重置周数
@@ -177,6 +331,7 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     isRegistered,
+    userId,
     userInfo,
     isFreeUser,
     usageStats,
@@ -185,7 +340,11 @@ export const useUserStore = defineStore('user', () => {
     tarotPaidCount,
     loveAssistantHistory,
     emotionCompanionHistory,
+    characterPreferences,
+    lastLoginTime,
     register,
+    login,
+    checkLoginStatus,
     updateUserInfo,
     clearAllData,
     incrementUsage,
@@ -196,7 +355,9 @@ export const useUserStore = defineStore('user', () => {
     addLoveAssistantConversation,
     removeLoveAssistantHistory,
     addEmotionCompanionConversation,
-    getEmotionCompanionConversation
+    getEmotionCompanionConversation,
+    saveCharacterPreferences,
+    loadCharacterPreferences
   }
 }, {
   persist: true

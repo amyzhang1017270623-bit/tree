@@ -8,16 +8,16 @@
       />
     </div>
 
-    <div v-if="!isRegistered" class="unregistered-section text-center w-full max-w-xs">
+    <div v-if="!isLoggedIn" class="unregistered-section text-center w-full max-w-xs">
       <p class="text-gray-500 text-sm leading-relaxed mb-3">有些话，你不是不会说，只是没人懂你......</p>
       <p class="text-gray-400 text-xs leading-relaxed mb-10">Some words, you know how to say them, but no one understands you...</p>
       
       <button 
-        @click="goToRegister"
+        @click="goToLogin"
         class="w-full bg-black text-white py-3.5 px-8 rounded-2xl font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex flex-col items-center"
       >
-        <span class="text-base">进入聊聊</span>
-        <span class="text-sm opacity-80">Enter</span>
+        <span class="text-base">去聊聊</span>
+        <span class="text-sm opacity-80">Let's Talk</span>
       </button>
     </div>
 
@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 
@@ -37,18 +37,20 @@ const logoSrc = new URL('/src/assets/images/icon_guide.png', import.meta.url).hr
 
 const router = useRouter()
 const userStore = useUserStore()
-const isRegistered = userStore.isRegistered
+const isLoggedIn = ref(false)
 
-const goToRegister = () => {
-  router.push('/register')
+const goToLogin = () => {
+  router.push('/login')
 }
 
 onMounted(() => {
-  setTimeout(() => {
-    if (isRegistered) {
+  isLoggedIn.value = userStore.checkLoginStatus()
+  
+  if (isLoggedIn.value) {
+    setTimeout(() => {
       router.push('/home')
-    }
-  }, 1500)
+    }, 1000)
+  }
 })
 </script>
 

@@ -11,6 +11,10 @@ const { t } = useI18n()
 const reminderStore = useReminderStore()
 const userStore = useUserStore()
 
+const getUserId = (): number | undefined => {
+  return userStore.userId || undefined
+}
+
 const messages = ref<{ id: string; text: string; isUser: boolean; timestamp: number; isVoice?: boolean; voiceUrl?: string; voiceDuration?: number; recognizedText?: string }[]>([])
 const messageInput = ref('')
 const isVoiceMode = ref(false)
@@ -20,7 +24,7 @@ const isLoading = ref(false)
 const showAddReminderConfirm = ref(false)
 const pendingReminder = ref<{ date: string; title: string } | null>(null)
 const editReminderTitle = ref('')
-let hasTrackedUsage = false
+
 
 const mediaRecorder = ref<MediaRecorder | null>(null)
 const recognition = ref<any>(null)
@@ -134,6 +138,12 @@ const detectDateInText = (input: string): { date: string; title: string } | null
     '要去', '要参加', '要见', '要买', '要吃', '要喝', '要做', '要做', '要开会'
   ]
   
+  // 特殊日期相关词汇：生日、纪念日等，这些词本身就表示需要记录的日期
+  const dateRelatedWords = [
+    '生日', '纪念日', '周年', '诞辰', '忌日', '节日', '假期', '放假',
+    '结婚', '订婚', '婚礼', '庆典', '聚会', '派对', '庆祝', '纪念'
+  ]
+  
   // 闲聊模式关键词：只是随口说说，不应该触发提醒
   const chatPatterns = [
     '天气', '心情', '不错', '很好', '真好', '还好', '好久', '什么', '怎么',
@@ -142,18 +152,21 @@ const detectDateInText = (input: string): { date: string; title: string } | null
   ]
   
   const hasReminderIntent = reminderIntents.some(keyword => cleanInput.includes(keyword))
+  const hasDateRelatedWord = dateRelatedWords.some(keyword => cleanInput.includes(keyword))
   const hasChatPattern = chatPatterns.some(pattern => cleanInput.includes(pattern))
   
-  // 只有当输入超过3个字且包含日程意图关键词时，才检测日期
-  if (cleanInput.length <= 3 || !hasReminderIntent) {
+  // 如果输入超过3个字，且满足以下条件之一，才检测日期：
+  // 1. 包含日程意图关键词
+  // 2. 包含日期相关词汇（如生日、纪念日等）
+  if (cleanInput.length <= 3 || (!hasReminderIntent && !hasDateRelatedWord)) {
     return null
   }
   
-  // 如果有明确的日程意图，但同时有闲聊模式关键词，需要更严格的判断
-  if (hasReminderIntent && hasChatPattern) {
-    // 只有当日程意图关键词在闲聊模式关键词之前出现，或者包含明确的日程词时才触发
+  // 如果有明确的日程意图或日期相关词汇，但同时有闲聊模式关键词，需要更严格的判断
+  if ((hasReminderIntent || hasDateRelatedWord) && hasChatPattern) {
+    // 只有当明确的日程意图关键词出现，或者日期相关词汇出现时才触发
     const hasStrongReminderIntent = reminderIntents.slice(0, 8).some(keyword => cleanInput.includes(keyword))
-    if (!hasStrongReminderIntent) {
+    if (!hasStrongReminderIntent && !hasDateRelatedWord) {
       return null
     }
   }
@@ -380,11 +393,6 @@ const sendMessage = async () => {
   const text = messageInput.value.trim()
   if (!text || isLoading.value) return
 
-  if (!hasTrackedUsage) {
-    userStore.incrementUsage('assistant')
-    hasTrackedUsage = true
-  }
-
   messages.value.push({
     id: Date.now().toString(),
     text: text,
@@ -426,18 +434,22 @@ const getAIReply = async (text: string) => {
     ], undefined, 400)
 
     messages.value.push({
-      id: (Date.now() + 1).toString(),
-      text: response,
-      isUser: false,
-      timestamp: Date.now()
-    })
-  } catch (error) {
+        id: (Date.now() + 1).toString(),
+        text: response,
+        isUser: false,
+        timestamp: Date.now()
+      })
+      
+      userStore.incrementUsage('assistant')
+    } catch (error) {
     messages.value.push({
       id: (Date.now() + 1).toString(),
       text: atmosphereMessages[Math.floor(Math.random() * atmosphereMessages.length)],
       isUser: false,
       timestamp: Date.now()
     })
+    
+    userStore.incrementUsage('assistant')
   } finally {
     isLoading.value = false
   }
@@ -576,11 +588,6 @@ const playVoice = (msg: any) => {
 }
 
 const handleVoiceReply = async (audioBlob?: Blob, webSpeechResult?: string) => {
-  if (!hasTrackedUsage) {
-    userStore.incrementUsage('assistant')
-    hasTrackedUsage = true
-  }
-  
   try {
     let finalRecognizedText = ''
     
@@ -633,10 +640,10 @@ const handleVoiceReply = async (audioBlob?: Blob, webSpeechResult?: string) => {
   }
 }
 
-const confirmAddReminder = () => {
+const confirmAddReminder = async () => {
   if (pendingReminder.value) {
     const title = editReminderTitle.value.trim() || '提醒'
-    reminderStore.addReminder({
+    await reminderStore.addReminder({
       date: pendingReminder.value.date,
       title: title,
       description: '',
@@ -644,7 +651,7 @@ const confirmAddReminder = () => {
       remindDayOf: reminderStore.remindDayOf,
       remind1DayBefore: reminderStore.remind1DayBefore,
       remind3DaysBefore: reminderStore.remind3DaysBefore
-    })
+    }, getUserId())
 
     messages.value.push({
       id: Date.now().toString(),
@@ -867,7 +874,7 @@ onUnmounted(() => {
                 <div class="text-xs text-gray-400 mt-1">{{ reminder.date }}</div>
               </div>
               <button 
-                @click="reminderStore.removeReminder(reminder.id)"
+                @click="reminderStore.removeReminder(reminder.id, getUserId())"
                 class="text-gray-400 hover:text-red-500 transition-colors"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

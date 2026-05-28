@@ -1,5 +1,5 @@
 <template>
-  <div class="home-container min-h-screen bg-gradient-to-b from-gray-50 to-white pb-16 relative">
+  <div class="home-container min-h-screen bg-gradient-to-b from-gray-50 to-white pb-6">
     <header class="sticky top-0 z-50 bg-gradient-to-b from-gray-50 to-gray-50/95 backdrop-blur-sm px-6 py-4 border-b border-gray-100">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-800">0号树洞</h1>
@@ -92,10 +92,10 @@
         v-for="func in functions"
         :key="func.id"
         @click="goToFunction(func.path)"
-        class="function-card bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:shadow-md hover:border-gray-300 transition-all duration-300 flex items-center gap-4"
+        class="function-card border border-gray-200 rounded-xl p-4 cursor-pointer hover:shadow-md hover:border-gray-300 transition-all duration-300 flex items-center gap-4"
       >
         <div class="w-12 h-12 flex items-center justify-center flex-shrink-0">
-          <img :src="func.icon" :alt="func.name" class="w-full h-full object-contain" />
+          <img :src="func.icon" :alt="func.name" :class="func.id === 5 ? 'w-10 h-10' : 'w-full h-full object-contain'" />
         </div>
         <div class="flex-1 min-w-0">
           <h3 class="text-base font-semibold text-gray-800 mb-0.5">{{ func.name }}</h3>
@@ -106,15 +106,6 @@
         </svg>
       </div>
     </div>
-    </div>
-
-    <div 
-      class="assistant-float-btn"
-      @click="goToAssistant"
-      @contextmenu.prevent="goToReminders"
-      title="点击进入助理，右键快速新建提醒"
-    >
-      <img src="@/assets/images/icon_assistant.svg" class="w-6 h-6 assistant-icon" alt="Assistant" />
     </div>
   </div>
 </template>
@@ -129,6 +120,7 @@ import iconAiqing from '@/assets/images/icon_aiqing.png'
 import iconPeiban from '@/assets/images/icon_peiban.png'
 import iconTree from '@/assets/images/icon_tree.png'
 import iconTarot from '@/assets/images/icon_tarot.png'
+import iconAssistant from '@/assets/images/icon_assistant.svg'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -154,17 +146,16 @@ const fortune = computed(() => {
 })
 
 const functions = computed(() => [
-  { id: 1, name: t('homeFeatures.loveAssistant'), description: currentLocale.value === 'zh' ? '帮你回消息、哄人、推进关系' : 'Help reply messages, comfort, advance relationships', icon: iconAiqing, bgColor: '#FFEEF2', path: '/love-assistant' },
-  { id: 2, name: t('homeFeatures.emotionCompanion'), description: currentLocale.value === 'zh' ? '当你孤单、想念时给你安慰' : 'Comfort when you are lonely or missing someone', icon: iconPeiban, bgColor: '#E8F4F8', path: '/emotion-companion' },
-  { id: 3, name: t('homeFeatures.emotionTreeHole'), description: t('homeFeatures.keepSecret'), icon: iconTree, bgColor: '#FAF5E6', path: '/tree-hole' },
-  { id: 4, name: t('homeFeatures.tarotWorld'), description: currentLocale.value === 'zh' ? '带你感受一下玄学世界' : 'Experience the mystical world', icon: iconTarot, bgColor: '#F3E8FF', path: '/tarot' }
+  { id: 1, name: t('homeFeatures.loveAssistant'), description: currentLocale.value === 'zh' ? '帮你回消息、哄人、推进关系' : 'Help reply messages, comfort, advance relationships', icon: iconAiqing, path: '/love-assistant' },
+  { id: 2, name: t('homeFeatures.emotionCompanion'), description: currentLocale.value === 'zh' ? '当你孤单、想念时给你安慰' : 'Comfort when you are lonely or missing someone', icon: iconPeiban, path: '/emotion-companion' },
+  { id: 3, name: t('homeFeatures.emotionTreeHole'), description: t('homeFeatures.keepSecret'), icon: iconTree, path: '/tree-hole' },
+  { id: 4, name: t('homeFeatures.tarotWorld'), description: currentLocale.value === 'zh' ? '带你感受一下玄学世界' : 'Experience the mystical world', icon: iconTarot, path: '/tarot' },
+  { id: 5, name: currentLocale.value === 'zh' ? '私人助理' : 'Personal Assistant', description: currentLocale.value === 'zh' ? '提醒事项、日程管理、帮你记录' : 'Reminders, schedule management, help you record', icon: iconAssistant, path: '/assistant' }
 ])
 
 const goToProfile = () => router.push('/profile')
 const goToFortune = () => router.push('/fortune')
 const goToFunction = (path: string) => router.push(path)
-const goToAssistant = () => router.push('/assistant')
-const goToReminders = () => router.push('/assistant/reminders')
 </script>
 
 <style scoped>
@@ -277,32 +268,4 @@ const goToReminders = () => router.push('/assistant/reminders')
   writing-mode: vertical-lr;
 }
 
-.assistant-float-btn {
-  position: fixed;
-  right: 24px;
-  bottom: 100px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 100;
-}
-
-.assistant-float-btn:hover {
-  background: #000;
-  transform: scale(1.05);
-}
-
-.assistant-icon {
-  filter: brightness(0) invert(1);
-}
-
-.assistant-float-btn:active {
-  transform: scale(0.95);
-}
 </style>

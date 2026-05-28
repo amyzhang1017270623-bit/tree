@@ -158,7 +158,7 @@ const { t } = useI18n()
 const router = useRouter()
 const userStore = useUserStore()
 
-let hasTrackedUsage = false
+
 
 const characters = [
   { id: 1, nameKey: 'characters.xiaoWei', avatar: '👧', descriptionKey: 'characters.virtualLove', needsSurvey: true },
@@ -243,7 +243,7 @@ const getExistingConversation = (characterId: number) => {
   return userStore.getEmotionCompanionConversation(characterId)
 }
 
-const selectCharacter = (char: typeof characters[0]) => {
+const selectCharacter = async (char: typeof characters[0]) => {
   const existingConv = getExistingConversation(char.id)
   
   if (existingConv && existingConv.surveyCompleted) {
@@ -275,6 +275,28 @@ const selectCharacter = (char: typeof characters[0]) => {
     surveyCompleted.value = false
     Object.keys(surveyAnswers).forEach(key => delete surveyAnswers[key])
     
+    // 如果是小薇，先尝试从数据库读取偏好
+    if (char.id === 1) {
+      const savedPreferences = await userStore.loadCharacterPreferences()
+      if (savedPreferences && Object.keys(savedPreferences).length > 0) {
+        console.log('从数据库读取到角色偏好:', savedPreferences)
+        Object.assign(surveyAnswers, savedPreferences)
+        surveyCompleted.value = true
+        showSurvey.value = false
+        // 生成性格特点介绍
+        const personalityIntro = generatePersonalityIntro()
+        // 设置欢迎语
+        messages.value = [{
+          id: Date.now().toString(),
+          text: `${t('emotionCompanion.greeting')}${t('characters.xiaoWei')}！${personalityIntro}`,
+          isUser: false,
+          timestamp: Date.now()
+        }]
+        nextTick(() => saveConversation())
+        return
+      }
+    }
+    
     if (char.needsSurvey) {
       showSurvey.value = true
       currentQuestion.value = 0
@@ -301,7 +323,7 @@ const generatePersonalityIntro = () => {
   return `${t('emotionCompanion.niceToMeet')}${t('emotionCompanion.loverPersonality')}${t('emotionCompanion.speak')}${t('emotionCompanion.willAccompany')}`
 }
 
-const handleSurveyNext = () => {
+const handleSurveyNext = async () => {
   if (!surveyAnswers[surveyQuestions[currentQuestion.value].id]) return
   
   if (currentQuestion.value < surveyQuestions.length - 1) {
@@ -310,6 +332,16 @@ const handleSurveyNext = () => {
     // 完成问卷
     showSurvey.value = false
     surveyCompleted.value = true
+    
+    // 如果是小薇，保存偏好到数据库
+    if (selectedCharacter.value?.id === 1) {
+      try {
+        await userStore.saveCharacterPreferences(surveyAnswers)
+        console.log('角色偏好已保存到数据库')
+      } catch (error) {
+        console.error('保存角色偏好失败:', error)
+      }
+    }
     
     // 生成性格特点介绍
     const personalityIntro = generatePersonalityIntro()
@@ -355,12 +387,6 @@ const sendMessage = async () => {
   
   scrollToBottom()
   
-  // 统计使用次数（每个会话只统计一次）
-  if (!hasTrackedUsage) {
-    userStore.incrementUsage('emotionCompanion')
-    hasTrackedUsage = true
-  }
-  
   try {
     if (selectedCharacter.value) {
       const reply = await getEmotionCompanionReply(
@@ -381,6 +407,7 @@ const sendMessage = async () => {
         timestamp: Date.now()
       })
       
+      userStore.incrementUsage('emotionCompanion')
       scrollToBottom()
     }
   } catch (error) {
@@ -400,6 +427,7 @@ const sendMessage = async () => {
       timestamp: Date.now()
     })
     
+    userStore.incrementUsage('emotionCompanion')
     scrollToBottom()
   }
 }

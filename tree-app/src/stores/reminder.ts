@@ -89,14 +89,46 @@ export const useReminderStore = defineStore('reminder', () => {
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
   })
 
-  const addReminder = (reminder: Omit<Reminder, 'id' | 'createdAt'>) => {
+  const addReminder = async (reminder: Omit<Reminder, 'id' | 'createdAt'>, userId?: number): Promise<boolean> => {
     const newReminder: Reminder = {
       ...reminder,
       id: Date.now().toString(),
       createdAt: Date.now()
     }
     reminders.value.push(newReminder)
-    const saved = saveToStorage(reminders.value)
+    
+    let saved = saveToStorage(reminders.value)
+    
+    if (userId) {
+      try {
+        const response = await fetch('/.netlify/functions/api/reminders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            date: reminder.date,
+            title: reminder.title,
+            description: reminder.description,
+            category: reminder.category,
+            remindDayOf: reminder.remindDayOf,
+            remind1DayBefore: reminder.remind1DayBefore,
+            remind3DaysBefore: reminder.remind3DaysBefore
+          })
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          newReminder.id = data.id.toString()
+          saveToStorage(reminders.value)
+          console.log('[Reminder Store] Added reminder to database:', data.message)
+        } else {
+          console.warn('[Reminder Store] Failed to save to database, using localStorage')
+        }
+      } catch (error) {
+        console.warn('[Reminder Store] Database save failed, using localStorage:', error)
+      }
+    }
+    
     console.log('[Reminder Store] Added reminder, saved:', saved)
     return saved
   }
@@ -109,17 +141,67 @@ export const useReminderStore = defineStore('reminder', () => {
     }
   }
 
-  const removeReminder = (id: string) => {
+  const removeReminder = async (id: string, userId?: number) => {
     const index = reminders.value.findIndex(r => r.id === id)
     if (index !== -1) {
       reminders.value.splice(index, 1)
       saveToStorage(reminders.value)
+      
+      if (userId) {
+        try {
+          const response = await fetch('/.netlify/functions/api/reminders', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, userId })
+          })
+          
+          if (response.ok) {
+            console.log('[Reminder Store] Deleted reminder from database')
+          } else {
+            console.warn('[Reminder Store] Failed to delete from database')
+          }
+        } catch (error) {
+          console.warn('[Reminder Store] Database delete failed:', error)
+        }
+      }
     }
   }
 
   const clearAllReminders = () => {
     reminders.value = []
     saveToStorage(reminders.value)
+  }
+
+  const loadRemindersFromDatabase = async (userId: number): Promise<boolean> => {
+    try {
+      const response = await fetch(`/.netlify/functions/api/reminders?userId=${userId}`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (Array.isArray(data)) {
+          const convertedReminders: Reminder[] = data.map(item => ({
+            id: String(item.id),
+            date: item.date,
+            title: item.title,
+            description: item.description || '',
+            category: (item.category || 'daily') as 'birthday' | 'anniversary' | 'personal' | 'daily',
+            remindDayOf: item.remind_day_of || item.remindDayOf || false,
+            remind1DayBefore: item.remind_1day_before || item.remind1DayBefore || false,
+            remind3DaysBefore: item.remind_3days_before || item.remind3DaysBefore || false,
+            createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now()
+          }))
+          reminders.value = convertedReminders
+          saveToStorage(reminders.value)
+          console.log('[Reminder Store] Loaded', convertedReminders.length, 'reminders from database')
+          return true
+        }
+      } else {
+        console.warn('[Reminder Store] Failed to load from database, using localStorage')
+      }
+    } catch (error) {
+      console.warn('[Reminder Store] Database load failed, using localStorage:', error)
+    }
+    return false
   }
 
   const updateSettings = (settings: {
@@ -148,6 +230,7 @@ export const useReminderStore = defineStore('reminder', () => {
     updateReminder,
     removeReminder,
     clearAllReminders,
+    loadRemindersFromDatabase,
     updateSettings
   }
 })

@@ -331,7 +331,7 @@ const router = useRouter()
 const tarotStore = useTarotStore()
 const userStore = useUserStore()
 
-let hasTrackedUsage = false
+
 
 if (typeof tarotStore.shuffleCards !== 'function') {
   console.warn('shuffleCards not found in tarotStore, using fallback')
@@ -474,11 +474,8 @@ const confirmSelection = async () => {
         )
         resultReading.value = reading
         
-        if (!hasTrackedUsage) {
-          userStore.incrementUsage('tarot')
-          userStore.useTarotReading()
-          hasTrackedUsage = true
-        }
+        userStore.incrementUsage('tarot')
+        userStore.useTarotReading()
       } catch (error) {
         console.error('Error getting tarot reading:', error)
         const keywords = isReversed.value ? resultCard.value?.reversed_keywords : resultCard.value?.upright_keywords
@@ -521,11 +518,8 @@ const confirmSelection = async () => {
         )
         resultReading.value = reading
         
-        if (!hasTrackedUsage) {
-          userStore.incrementUsage('tarot')
-          userStore.useTarotReading()
-          hasTrackedUsage = true
-        }
+        userStore.incrementUsage('tarot')
+        userStore.useTarotReading()
       } catch (error) {
         console.error('Error getting tarot reading:', error)
         const mainMeaning = isMainReversed.value ? resultMainCard.value?.reversed_meaning : resultMainCard.value?.upright_meaning

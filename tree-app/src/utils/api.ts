@@ -37,19 +37,28 @@ export const detectRegion = async (): Promise<boolean> => {
     return isChinaRegion
   }
 
+  isChinaRegion = true
+  
   try {
-    const response = await fetch('https://api.ipify.org?format=json')
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 2000)
+    
+    const response = await fetch('https://api.ipify.org?format=json', {
+      signal: controller.signal,
+      timeout: 2000
+    })
+    clearTimeout(timeout)
+    
     const data = await response.json()
     const ip = data.ip || ''
     
     const chinaIpRanges = ['1.0.16.', '1.0.32.', '1.1.1.', '1.1.2.', '1.1.3.', '1.1.4.', '1.1.5.', '119.29.', '119.30.', '120.23.', '121.40.', '121.41.', '121.42.', '121.43.', '183.195.', '183.196.', '183.197.', '183.198.', '183.199.', '203.119.', '203.208.', '223.56.', '223.57.', '223.58.', '223.59.', '223.60.', '223.61.', '223.62.', '223.63.']
     isChinaRegion = chinaIpRanges.some(range => ip.startsWith(range))
-    return isChinaRegion
   } catch (error) {
-    console.warn('Failed to detect region, defaulting to CN:', error)
-    isChinaRegion = true
-    return true
+    console.log('Using CN endpoint due to network restriction')
   }
+  
+  return isChinaRegion
 }
 
 export const getCurrentEndpoint = async (): Promise<string> => {
@@ -190,7 +199,7 @@ export const getEmotionCompanionReply = async (
     - 温暖、关心、有同理心
     - 根据用户的情绪调整回应
     - 可以适当使用emoji让对话更生动
-    - 如果需要描述动作或表情，请使用（）括号括起来，例如：（抬手轻轻捏住你的下巴）嗯？这么直白地告白，胆子不小啊...
+    - 不要使用行为动作描述，只输出纯文字对话内容，不要包含（）括号中的动作描述
   `.trim()
 
   // 根据角色ID添加特定设定

@@ -157,7 +157,7 @@ const { t } = useI18n()
 const router = useRouter()
 const userStore = useUserStore()
 
-let hasTrackedUsage = false
+
 
 const guideIcon = new URL('/src/assets/images/icon_tree2.png', import.meta.url).href
 const messages = ref<{ isUser: boolean; text: string; imageUrl?: string; isVoice?: boolean; voiceUrl?: string; voiceDuration?: number; recognizedText?: string }[]>([])
@@ -339,11 +339,6 @@ const playVoice = (msg: any) => {
 }
 
 const handleVoiceReply = async (audioBlob?: Blob, webSpeechResult?: string) => {
-  if (!hasTrackedUsage) {
-    userStore.incrementUsage('treeHole')
-    hasTrackedUsage = true
-  }
-  
   isLoading.value = true
   
   try {
@@ -498,19 +493,16 @@ const sendMessage = async () => {
   
   scrollToBottom()
   
-  if (!hasTrackedUsage) {
-    userStore.incrementUsage('treeHole')
-    hasTrackedUsage = true
-  }
-  
   try {
     const reply = await getTreeHoleReply(messages.value[messages.value.length - 1].text)
     messages.value.push({ isUser: false, text: reply || t('treeHole.imListening') })
+    userStore.incrementUsage('treeHole')
     scrollToBottom()
   } catch (error) {
     console.error('Failed to get AI reply, using fallback:', error)
     const fallbackReply = generateFallbackReply(messages.value[messages.value.length - 1].text)
     messages.value.push({ isUser: false, text: fallbackReply })
+    userStore.incrementUsage('treeHole')
     scrollToBottom()
   } finally {
     isLoading.value = false
@@ -535,11 +527,6 @@ const handleImageUpload = async (event: Event) => {
     
     scrollToBottom()
     
-    if (!hasTrackedUsage) {
-      userStore.incrementUsage('treeHole')
-      hasTrackedUsage = true
-    }
-    
     isLoading.value = true
     
     try {
@@ -549,10 +536,12 @@ const handleImageUpload = async (event: Event) => {
       
       const reply = await getTreeHoleReply(prompt)
       messages.value.push({ isUser: false, text: reply || t('treeHole.imListening') })
+      userStore.incrementUsage('treeHole')
     } catch (error) {
       console.error('Error processing image:', error)
       const fallbackReply = generateFallbackReply('图片')
       messages.value.push({ isUser: false, text: fallbackReply })
+      userStore.incrementUsage('treeHole')
     } finally {
       isLoading.value = false
       scrollToBottom()

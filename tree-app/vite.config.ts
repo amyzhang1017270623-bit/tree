@@ -80,6 +80,36 @@ export default defineConfig({
         headers: {
           'Authorization': `Bearer ${API_KEYS.global}`
         }
+      },
+      '/.netlify/functions/api': {
+        target: 'http://localhost:8888',
+        changeOrigin: true,
+        secure: false
+      },
+      '/.netlify/functions/api-users': {
+        target: 'http://localhost:8888',
+        changeOrigin: true,
+        secure: false
+      },
+      '/.netlify/functions/api/check-phone': {
+        target: 'http://localhost:8888',
+        changeOrigin: true,
+        secure: false
+      },
+      '/.netlify/functions/login': {
+        target: 'http://localhost:8888',
+        changeOrigin: true,
+        secure: false
+      },
+      '/.netlify/functions/api-update-stats': {
+        target: 'http://localhost:8888',
+        changeOrigin: true,
+        secure: false
+      },
+      '/.netlify/functions/api/user-details': {
+        target: 'http://localhost:8888',
+        changeOrigin: true,
+        secure: false
       }
     }
   }

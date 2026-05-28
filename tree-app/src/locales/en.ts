@@ -278,7 +278,10 @@ export default {
     inputHint: 'Analyze chat content, get personalized reply suggestions',
     uploadImage: 'Upload Image',
     uploadFile: 'Upload File',
-    getTwenty: 'times'
+    getTwenty: 'times',
+    welcome: 'Hello! I\'m your love assistant, here to help analyze chats and suggest replies~',
+    placeholder: 'Type your chat content, or describe the situation...',
+    thinking: 'Thinking...'
   },
   zodiac: {
     aries: 'Aries',

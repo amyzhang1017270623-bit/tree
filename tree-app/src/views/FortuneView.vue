@@ -16,7 +16,7 @@
 
     <div class="fortune-header text-center mb-10">
       <div class="zodiac-icon w-20 h-20 mx-auto mb-4">
-        <img :src="`/src/assets/images/star/icon_${getZodiacFileName(fortune.zodiac)}.svg`" :alt="fortune.zodiac" class="w-full h-full" />
+        <img :src="getZodiacIcon(fortune.zodiac)" :alt="fortune.zodiac" class="w-full h-full" />
       </div>
       <h1 class="text-3xl font-bold mb-2">{{ locale === 'zh' ? fortune.zodiac + '座' : fortune.zodiacEn }}</h1>
       <p class="text-gray-500">{{ today }}</p>
@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useUserStore } from '../stores/user'
@@ -116,6 +116,10 @@ import { calculateFortune, ZODIAC_ENGLISH } from '../utils/fortune'
 const { t, locale } = useI18n()
 const router = useRouter()
 const userStore = useUserStore()
+
+onMounted(() => {
+  userStore.incrementUsage('fortune')
+})
 
 const today = computed(() => {
   const d = new Date()
@@ -154,6 +158,11 @@ const zodiacFileNameMap: Record<string, string> = {
 
 function getZodiacFileName(zodiac: string): string {
   return zodiacFileNameMap[zodiac] || 'muyangzuo'
+}
+
+function getZodiacIcon(zodiac: string): string {
+  const fileName = getZodiacFileName(zodiac)
+  return new URL(`/src/assets/images/star/icon_${fileName}.svg`, import.meta.url).href
 }
 
 function getZodiacEnglish(zodiac: string): string {

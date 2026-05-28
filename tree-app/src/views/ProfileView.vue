@@ -142,7 +142,7 @@
     </div>
     </div>
 
-    <div v-if="showEditInfo" class="edit-modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
+    <div v-if="showEditInfo" class="edit-modal fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
       <div class="bg-white rounded-2xl w-full max-w-sm p-6">
         <h2 class="text-xl font-bold mb-6">{{ t('profile.editInfo') }}</h2>
         <div class="space-y-4 mb-6">
@@ -175,6 +175,35 @@
         </div>
       </div>
     </div>
+
+    <!-- 清空数据确认弹框 -->
+    <div v-if="showClearConfirm" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+      <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden">
+        <div class="p-6 text-center">
+          <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2">{{ t('profile.clearData') }}</h3>
+          <p class="text-gray-600 text-sm">{{ t('profile.confirmClear') }}</p>
+        </div>
+        <div class="flex border-t border-gray-100">
+          <button 
+            @click="showClearConfirm = false" 
+            class="flex-1 py-4 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+          >
+            {{ t('general.cancel') }}
+          </button>
+          <button 
+            @click="handleClearData" 
+            class="flex-1 py-4 text-red-500 font-medium hover:bg-red-50 transition-colors border-l border-gray-100"
+          >
+            {{ t('general.confirm') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -191,6 +220,7 @@ const userStore = useUserStore()
 const reminderStore = useReminderStore()
 
 const showEditInfo = ref(false)
+const showClearConfirm = ref(false)
 
 const genderOptions = computed(() => [
   { key: 'male', value: '男' as const, label: t('profile.male') },
@@ -204,10 +234,12 @@ const editForm = reactive({
 })
 
 const confirmClearData = () => {
-  if (confirm(t('profile.confirmClear'))) {
-    userStore.clearAllData()
-    router.push('/')
-  }
+  showClearConfirm.value = true
+}
+
+const handleClearData = () => {
+  userStore.clearAllData()
+  router.push('/')
 }
 
 const saveEditInfo = () => {

@@ -278,7 +278,10 @@ export default {
     inputHint: '分析聊天内容，获取专属回复建议',
     uploadImage: '上传图片',
     uploadFile: '上传文件',
-    getTwenty: '次'
+    getTwenty: '次',
+    welcome: '你好！我是你的恋爱助手，可以帮你分析聊天记录，提供回复建议~',
+    placeholder: '输入聊天内容，或者描述一下情况...',
+    thinking: '思考中...'
   },
   zodiac: {
     aries: '白羊座',
