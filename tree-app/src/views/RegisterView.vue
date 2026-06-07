@@ -170,7 +170,7 @@
           >
             <button @click="adjustYear(-1)" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors">
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l7-7 7 7"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7 7 7"></path>
               </svg>
             </button>
             <div class="my-2 select-value">
@@ -179,7 +179,7 @@
             </div>
             <button @click="adjustYear(1)" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors">
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l7-7 7 7"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7-7-7"></path>
               </svg>
             </button>
           </div>
@@ -193,7 +193,7 @@
           >
             <button @click="adjustMonth(-1)" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors">
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l7-7 7 7"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7 7 7"></path>
               </svg>
             </button>
             <div class="my-2 select-value">
@@ -202,7 +202,7 @@
             </div>
             <button @click="adjustMonth(1)" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors">
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l7-7 7 7"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7-7-7"></path>
               </svg>
             </button>
           </div>
@@ -216,7 +216,7 @@
           >
             <button @click="adjustDay(-1)" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors">
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l7-7 7 7"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7 7 7"></path>
               </svg>
             </button>
             <div class="my-2 select-value">
@@ -225,7 +225,7 @@
             </div>
             <button @click="adjustDay(1)" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors">
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l7-7 7 7"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7-7-7"></path>
               </svg>
             </button>
           </div>

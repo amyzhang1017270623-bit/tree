@@ -36,7 +36,7 @@
               </div>
               <div class="flex items-center justify-between py-2 border-b border-gray-100">
                 <span class="text-sm text-gray-500">生日</span>
-                <span class="text-sm text-gray-800 font-medium">{{ user.birth_date || '-' }}</span>
+                <span class="text-sm text-gray-800 font-medium">{{ formatDate(user.birth_date) }}</span>
               </div>
               <div class="flex items-center justify-between py-2 border-b border-gray-100">
                 <span class="text-sm text-gray-500">出生时间</span>
@@ -44,7 +44,7 @@
               </div>
               <div class="flex items-center justify-between py-2">
                 <span class="text-sm text-gray-500">注册时间</span>
-                <span class="text-sm text-gray-800 font-medium">{{ user.created_at || '-' }}</span>
+                <span class="text-sm text-gray-800 font-medium">{{ formatDateTime(user.created_at) }}</span>
               </div>
             </div>
           </div>
@@ -53,20 +53,24 @@
             <h2 class="text-base sm:text-lg font-semibold text-gray-800 mb-4">使用统计</h2>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div class="bg-gray-50 rounded-lg p-3">
-                <p class="text-xs sm:text-sm text-gray-500 mb-1">情感陪伴</p>
-                <p class="text-lg sm:text-xl font-bold text-gray-800">{{ usageStats.emotionCompanion }}</p>
-              </div>
-              <div class="bg-gray-50 rounded-lg p-3">
-                <p class="text-xs sm:text-sm text-gray-500 mb-1">塔罗占卜</p>
-                <p class="text-lg sm:text-xl font-bold text-gray-800">{{ usageStats.tarot }}</p>
+                <p class="text-xs sm:text-sm text-gray-500 mb-1">今日运势</p>
+                <p class="text-lg sm:text-xl font-bold text-gray-800">{{ usageStats.fortune }}</p>
               </div>
               <div class="bg-gray-50 rounded-lg p-3">
                 <p class="text-xs sm:text-sm text-gray-500 mb-1">恋爱助手</p>
                 <p class="text-lg sm:text-xl font-bold text-gray-800">{{ usageStats.loveAssistant }}</p>
               </div>
               <div class="bg-gray-50 rounded-lg p-3">
-                <p class="text-xs sm:text-sm text-gray-500 mb-1">树洞</p>
+                <p class="text-xs sm:text-sm text-gray-500 mb-1">情感陪伴</p>
+                <p class="text-lg sm:text-xl font-bold text-gray-800">{{ usageStats.emotionCompanion }}</p>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3">
+                <p class="text-xs sm:text-sm text-gray-500 mb-1">情感树洞</p>
                 <p class="text-lg sm:text-xl font-bold text-gray-800">{{ usageStats.treeHole }}</p>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3">
+                <p class="text-xs sm:text-sm text-gray-500 mb-1">塔罗世界</p>
+                <p class="text-lg sm:text-xl font-bold text-gray-800">{{ usageStats.tarot }}</p>
               </div>
               <div class="bg-gray-50 rounded-lg p-3">
                 <p class="text-xs sm:text-sm text-gray-500 mb-1">私人助理</p>
@@ -207,6 +211,7 @@ const user = ref<any>(null)
 const isEditing = ref(false)
 const showDeleteConfirm = ref(false)
 const usageStats = ref({
+  fortune: 0,
   emotionCompanion: 0,
   tarot: 0,
   loveAssistant: 0,
@@ -227,9 +232,44 @@ const formatKey = (key: string) => {
     avatar: '头像',
     personality: '性格',
     voice: '声音',
-    language: '语言'
+    language: '语言',
+    gender: '性别',
+    style: '风格',
+    age: '年龄',
+    tone: '语气'
   }
   return keyMap[key] || key
+}
+
+const formatDateTime = (dateString: string) => {
+  if (!dateString) return '-'
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return dateString
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  } catch {
+    return dateString
+  }
+}
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return '-'
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return dateString
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  } catch {
+    return dateString
+  }
 }
 
 const goBack = () => {
@@ -306,9 +346,31 @@ const loadUser = async () => {
           characterPreferences.value = null
         }
       }
+      
+      // 加载用户使用统计数据
+      await loadUserUsageStats(userId)
     }
   } catch (error) {
     console.error('加载用户详情失败:', error)
+  }
+}
+
+const loadUserUsageStats = async (userId: any) => {
+  try {
+    const response = await fetch(`/.netlify/functions/api-admin-users/${userId}/stats`)
+    if (response.ok) {
+      const data = await response.json()
+      usageStats.value = {
+        fortune: data.fortune || 0,
+        emotionCompanion: data.emotion || 0,
+        tarot: data.tarot || 0,
+        loveAssistant: data.loveAssistant || 0,
+        treeHole: data.treeHole || 0,
+        assistant: data.assistant || 0
+      }
+    }
+  } catch (error) {
+    console.error('加载用户使用统计失败:', error)
   }
 }
 

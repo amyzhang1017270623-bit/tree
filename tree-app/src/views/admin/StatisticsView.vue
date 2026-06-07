@@ -95,20 +95,25 @@
               </button>
             </div>
           </div>
-          <div class="h-40 sm:h-64 flex items-end gap-1 sm:gap-2 pt-8">
+          <div class="h-40 sm:h-64 grid grid-cols-7 gap-1 sm:gap-2 pt-8">
             <div v-for="(value, index) in currentChartData" :key="index" 
-                 class="flex-1 bg-gradient-to-t from-blue-500 to-blue-300 rounded-t transition-all relative"
-                 :style="{ height: `${(value / maxChartValue) * 100}%` }">
+                 class="flex flex-col items-center justify-end"
+                 :style="{ height: '100%' }">
               <span 
                 v-if="value > 0"
-                class="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-700 whitespace-nowrap"
+                class="text-xs font-bold text-gray-700 mb-1"
               >
                 {{ value }}
               </span>
+              <div 
+                class="w-full bg-gradient-to-t from-blue-500 to-blue-300 rounded-t transition-all"
+                :style="{ height: `${(value / maxChartValue) * 100}%` }">
+              </div>
             </div>
           </div>
-          <div class="flex justify-between mt-2 text-xs text-gray-500 flex-wrap gap-1">
-            <span v-for="(label, index) in currentChartLabels" :key="index">{{ label }}</span>
+          <div class="grid grid-cols-7 gap-1 sm:gap-2 mt-2">
+            <span v-for="(label, index) in currentChartLabels" :key="index" 
+                  class="text-xs text-gray-500 text-center">{{ label }}</span>
           </div>
         </div>
 

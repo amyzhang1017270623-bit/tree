@@ -145,6 +145,18 @@
       </div>
     </div>
   </div>
+  
+  <DailyLimitModal
+    :visible="showDailyLimitModal"
+    title="今日使用次数已达上限"
+    message="聊了这么久了，请我喝一杯奶茶吧"
+    :current-usage="dailyLimitData.currentUsage"
+    :daily-limit="dailyLimitData.dailyLimit"
+    buy-text="买一杯"
+    cancel-text="取消"
+    @close="showDailyLimitModal = false"
+    @buy="showDailyLimitModal = false"
+  />
 </template>
 
 <script setup lang="ts">
@@ -153,6 +165,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useUserStore, type ChatMessage } from '../stores/user'
 import { getEmotionCompanionReply } from '../utils/api'
+import DailyLimitModal from '../components/DailyLimitModal.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -209,6 +222,8 @@ const messages = ref<ChatMessage[]>([
 ])
 const messageInput = ref('')
 const showAlertModal = ref(false)
+const showDailyLimitModal = ref(false)
+const dailyLimitData = ref({ currentUsage: 0, dailyLimit: 100 })
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -320,7 +335,57 @@ const selectOption = (opt: { key: string; value: string }) => {
 }
 
 const generatePersonalityIntro = () => {
-  return `${t('emotionCompanion.niceToMeet')}${t('emotionCompanion.loverPersonality')}${t('emotionCompanion.speak')}${t('emotionCompanion.willAccompany')}`
+  const style = surveyAnswers['style'] || '温柔治愈'
+  const personality = surveyAnswers['personality'] || '黏人粘人'
+  const tone = surveyAnswers['tone'] || '温柔轻声'
+  
+  const styleMap: Record<string, string> = {
+    '温柔治愈': t('emotionCompanion.gentleHealing'),
+    '霸道强势': t('emotionCompanion.domineeringStrong'),
+    '清冷禁欲': t('emotionCompanion.coldAustere'),
+    '奶狗甜系': t('emotionCompanion.sweetCute')
+  }
+  
+  const personalityMap: Record<string, string> = {
+    '黏人粘人': t('emotionCompanion.clingy'),
+    '独立克制': t('emotionCompanion.independent'),
+    '慢热内敛': t('emotionCompanion.slowToWarm'),
+    '外向话多': t('emotionCompanion.outgoingTalkative')
+  }
+  
+  const toneMap: Record<string, string> = {
+    '温柔轻声': t('emotionCompanion.gentleWhisper'),
+    '直球直白': t('emotionCompanion.straightforward'),
+    '幽默搞笑': t('emotionCompanion.humorousFunny'),
+    '文艺细腻': t('emotionCompanion.literaryDelicate')
+  }
+  
+  return `${t('emotionCompanion.niceToMeet')}${styleMap[style]}${t('emotionCompanion.with')}${personalityMap[personality]}${t('emotionCompanion.and')}${toneMap[tone]}${t('emotionCompanion.willAccompany')}`
+}
+
+const cleanReply = (text: string): string => {
+  let cleaned = text
+  
+  // 移除动作描述语句（星号包裹的内容）
+  cleaned = cleaned.replace(/\*[^*]+\*/g, '')
+  
+  // 移除动作描述语句（中文括号内的内容）
+  cleaned = cleaned.replace(/（[^）]+）/g, '')
+  
+  // 移除动作描述语句（英文括号内的内容）
+  cleaned = cleaned.replace(/\([^)]+\)/g, '')
+  
+  // 移除动作描述语句（方括号内的内容）
+  cleaned = cleaned.replace(/\[([^\]]+)\]/g, '')
+  
+  // 移除表情符号
+  cleaned = cleaned.replace(/[\u{1F000}-\u{1F9FF}]/gu, '')
+  cleaned = cleaned.replace(/[\u{2600}-\u{26FF}]/gu, '')
+  
+  // 移除多余空格和换行
+  cleaned = cleaned.replace(/\s+/g, ' ').trim()
+  
+  return cleaned
 }
 
 const handleSurveyNext = async () => {
@@ -370,39 +435,68 @@ const closeAlertModal = () => {
 }
 
 const sendMessage = async () => {
-  if (!selectedCharacter.value) {
-    showAlertModal.value = true
-    return
-  }
-  if (!messageInput.value.trim()) return
-  
-  const userText = messageInput.value
-  messages.value.push({
-    id: Date.now().toString(),
-    text: userText,
-    isUser: true,
-    timestamp: Date.now()
-  })
-  messageInput.value = ''
-  
-  scrollToBottom()
-  
-  try {
-    if (selectedCharacter.value) {
-      const reply = await getEmotionCompanionReply(
-        userText,
-        {
-          characterName: t(selectedCharacter.value.nameKey),
-          characterAvatar: selectedCharacter.value.avatar,
-          characterId: selectedCharacter.value.id,
-          surveyAnswers: { ...surveyAnswers }
-        },
-        messages.value.slice(0, -1) // 传递历史对话（排除当前刚添加的用户消息）
-      )
-      
+    if (!selectedCharacter.value) {
+      showAlertModal.value = true
+      return
+    }
+    if (!messageInput.value.trim()) return
+    
+    const limitResult = await userStore.checkDailyLimit()
+    if (!limitResult.canUse) {
+      dailyLimitData.value = { currentUsage: limitResult.currentUsage, dailyLimit: limitResult.dailyLimit }
+      showDailyLimitModal.value = true
+      return
+    }
+    
+    const userText = messageInput.value
+    messages.value.push({
+      id: Date.now().toString(),
+      text: userText,
+      isUser: true,
+      timestamp: Date.now()
+    })
+    messageInput.value = ''
+    
+    scrollToBottom()
+    
+    try {
+      if (selectedCharacter.value) {
+        const reply = await getEmotionCompanionReply(
+          userText,
+          {
+            characterName: t(selectedCharacter.value.nameKey),
+            characterAvatar: selectedCharacter.value.avatar,
+            characterId: selectedCharacter.value.id,
+            surveyAnswers: { ...surveyAnswers }
+          },
+          messages.value.slice(0, -1) // 传递历史对话（排除当前刚添加的用户消息）
+        )
+        
+        const cleanedReply = cleanReply(reply || t('emotionCompanion.listening'))
+        
+        messages.value.push({
+          id: (Date.now() + 1).toString(),
+          text: cleanedReply || t('emotionCompanion.listening'),
+          isUser: false,
+          timestamp: Date.now()
+        })
+        
+        userStore.incrementUsage('emotionCompanion')
+        scrollToBottom()
+      }
+    } catch (error) {
+      console.error('Error getting emotion companion reply:', error)
+      // 降级到硬编码回复
+      const replies = [
+        t('emotionCompanion.listening'),
+        t('emotionCompanion.understandFeelings'),
+        t('emotionCompanion.wantToTalk'),
+        t('emotionCompanion.willAlwaysAccompany')
+      ]
+      const randomReply = replies[Math.floor(Math.random() * replies.length)]
       messages.value.push({
         id: (Date.now() + 1).toString(),
-        text: reply || t('emotionCompanion.listening'),
+        text: randomReply,
         isUser: false,
         timestamp: Date.now()
       })
@@ -410,27 +504,7 @@ const sendMessage = async () => {
       userStore.incrementUsage('emotionCompanion')
       scrollToBottom()
     }
-  } catch (error) {
-    console.error('Error getting emotion companion reply:', error)
-    // 降级到硬编码回复
-    const replies = [
-      t('emotionCompanion.listening'),
-      t('emotionCompanion.understandFeelings'),
-      t('emotionCompanion.wantToTalk'),
-      t('emotionCompanion.willAlwaysAccompany')
-    ]
-    const randomReply = replies[Math.floor(Math.random() * replies.length)]
-    messages.value.push({
-      id: (Date.now() + 1).toString(),
-      text: randomReply,
-      isUser: false,
-      timestamp: Date.now()
-    })
-    
-    userStore.incrementUsage('emotionCompanion')
-    scrollToBottom()
   }
-}
 
 const goBack = () => router.push('/home')
 

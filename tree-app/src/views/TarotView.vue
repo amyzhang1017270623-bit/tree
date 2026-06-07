@@ -381,6 +381,7 @@ const shuffling = ref(false)
 const shuffled = ref(false)
 const showCardsList = ref(false)
 const showResult = ref(false)
+const hasTrackedUsage = ref(false)
 
 const selectedSingleNumber = ref<number | null>(null)
 const selectedMainNumber = ref<number | null>(null)
@@ -569,7 +570,7 @@ const resetState = () => {
   resultMainCard.value = null
   resultThreeCards.value = []
   resultReading.value = ''
-  hasTrackedUsage = false
+  hasTrackedUsage.value = false
 }
 
 const goBack = () => router.push('/home')

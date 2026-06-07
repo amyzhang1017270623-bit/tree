@@ -38,8 +38,16 @@ export async function getConnection() {
     return null;
   }
 
+  // 检查连接是否存在且可用
   if (connection) {
-    return connection;
+    try {
+      // 尝试 ping 测试连接
+      await connection.ping();
+      return connection;
+    } catch (error) {
+      console.warn('⚠️  数据库连接已断开，重新连接...');
+      connection = null;
+    }
   }
 
   try {

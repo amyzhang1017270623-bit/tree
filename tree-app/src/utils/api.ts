@@ -363,6 +363,15 @@ export const getTarotReading = async (
   }
 }
 
+// 创建超时Promise
+const createTimeoutPromise = (ms: number, message: string): Promise<never> => {
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(message))
+    }, ms)
+  })
+}
+
 export const analyzeImageContent = async (imageBase64: string, prompt?: string): Promise<string> => {
   // 首先尝试使用浏览器原生OCR API
   const nativeResult = await extractTextFromImage(imageBase64)
@@ -378,7 +387,6 @@ export const analyzeImageContent = async (imageBase64: string, prompt?: string):
     // 确保图片是完整的data URL格式（API需要URL格式）
     let imageData = imageBase64
     if (!imageBase64.startsWith('data:')) {
-      // 如果是纯base64，添加图片类型前缀
       imageData = `data:image/png;base64,${imageBase64}`
     }
     
@@ -386,8 +394,8 @@ export const analyzeImageContent = async (imageBase64: string, prompt?: string):
     console.log(`[Multimodal API] Image data length: ${imageData.length}`)
     console.log(`[Multimodal API] Prompt: ${prompt}`)
 
-    // 使用Netlify Function代理
-    const response = await fetch('/.netlify/functions/qwen-api/multiCn', {
+    // 创建带超时的请求
+    const fetchPromise = fetch('/.netlify/functions/qwen-api/multiCn', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -418,6 +426,12 @@ export const analyzeImageContent = async (imageBase64: string, prompt?: string):
       })
     })
 
+    // 设置15秒超时
+    const response = await Promise.race([
+      fetchPromise,
+      createTimeoutPromise(15000, '请求超时')
+    ])
+
     console.log(`[Multimodal API] Response status: ${response.status}`)
     
     if (!response.ok) {
@@ -428,10 +442,6 @@ export const analyzeImageContent = async (imageBase64: string, prompt?: string):
 
     const data = await response.json()
     console.log('[Multimodal API] Response data:', JSON.stringify(data, null, 2))
-    
-    // 添加详细调试信息
-    console.log('[Multimodal API] Debug - output:', data.output)
-    console.log('[Multimodal API] Debug - choices:', data.choices)
     console.log('[Multimodal API] Debug - choices[0]:', data.choices?.[0])
     console.log('[Multimodal API] Debug - choices[0].message:', data.choices?.[0]?.message)
     console.log('[Multimodal API] Debug - choices[0].message.content:', data.choices?.[0]?.message?.content)

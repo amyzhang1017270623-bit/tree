@@ -218,6 +218,18 @@
       </div>
     </div>
   </div>
+  
+  <DailyLimitModal
+    :visible="showDailyLimitModal"
+    title="今日使用次数已达上限"
+    message="聊了这么久了，请我喝一杯奶茶吧"
+    :current-usage="dailyLimitData.currentUsage"
+    :daily-limit="dailyLimitData.dailyLimit"
+    buy-text="买一杯"
+    cancel-text="取消"
+    @close="showDailyLimitModal = false"
+    @buy="showDailyLimitModal = false"
+  />
 </template>
 
 <script setup lang="ts">
@@ -226,6 +238,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useUserStore } from '../stores/user'
 import { analyzeLoveChat, analyzeImageContent } from '../utils/api'
+import DailyLimitModal from '../components/DailyLimitModal.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -258,6 +271,8 @@ const messages = ref<LoveMessage[]>([
 ])
 const messageInput = ref('')
 const isLoading = ref(false)
+const showDailyLimitModal = ref(false)
+const dailyLimitData = ref({ currentUsage: 0, dailyLimit: 100 })
 
 // 输入框引用
 const messageInputRef = ref<HTMLTextAreaElement | null>(null)
@@ -318,6 +333,13 @@ const copyText = (text: string) => {
 
 const sendMessage = async () => {
   if ((!messageInput.value.trim() && !imagePreview.value && !filePreview.value) || isLoading.value) return
+  
+  const limitResult = await userStore.checkDailyLimit()
+  if (!limitResult.canUse) {
+    dailyLimitData.value = { currentUsage: limitResult.currentUsage, dailyLimit: limitResult.dailyLimit }
+    showDailyLimitModal.value = true
+    return
+  }
   
   // 添加用户消息
   const userMessage: LoveMessage = {

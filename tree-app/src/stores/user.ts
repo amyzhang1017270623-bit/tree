@@ -128,7 +128,26 @@ export const useUserStore = defineStore('user', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, password })
       })
-      const data = await response.json()
+      
+      if (!response.ok) {
+        const text = await response.text()
+        console.error('❌ 登录请求失败，HTTP状态:', response.status, '响应内容:', text)
+        return false
+      }
+      
+      const text = await response.text()
+      if (!text) {
+        console.error('❌ 登录失败，响应为空')
+        return false
+      }
+      
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (parseError) {
+        console.error('❌ 登录失败，响应不是有效的JSON:', parseError, '响应内容:', text)
+        return false
+      }
       
       if (response.ok) {
         userId.value = data.id
@@ -200,26 +219,64 @@ export const useUserStore = defineStore('user', () => {
     emotionCompanionHistory.value = []
   }
 
+  const checkDailyLimit = async (): Promise<{ canUse: boolean; currentUsage: number; dailyLimit: number; remainingUsage: number }> => {
+    if (!userId.value) {
+      return { canUse: true, currentUsage: 0, dailyLimit: 100, remainingUsage: 100 };
+    }
+    
+    try {
+      const response = await fetch(`/.netlify/functions/api-update-stats?userId=${userId.value}`);
+      const data = await response.json();
+      return {
+        canUse: data.canUse ?? true,
+        currentUsage: data.currentUsage ?? 0,
+        dailyLimit: data.dailyLimit ?? 100,
+        remainingUsage: data.remainingUsage ?? 100
+      };
+    } catch (error) {
+      console.error('[Usage Limit Check] Failed to check daily limit:', error);
+      return { canUse: true, currentUsage: 0, dailyLimit: 100, remainingUsage: 100 };
+    }
+  }
+
   const incrementUsage = async (type: 'emotionCompanion' | 'treeHole' | 'tarot' | 'loveAssistant' | 'assistant' | 'fortune') => {
     usageStats.value[type]++
+    console.log(`[Usage Stats] Incrementing ${type}, current value: ${usageStats.value[type]}`)
+    
     if (userId.value) {
+      console.log(`[Usage Stats] User ID exists: ${userId.value}, sending to API`)
       try {
-        await fetch('/.netlify/functions/api-update-stats', {
+        const response = await fetch('/.netlify/functions/api-update-stats', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: userId.value, type })
         })
+        console.log(`[Usage Stats] API response status: ${response.status}`)
+        
+        if (response.status === 403) {
+          usageStats.value[type]--
+          const data = await response.json()
+          throw new Error(data.message || '今日使用次数已用完，请明天再试')
+        }
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error(`[Usage Stats] API error: ${errorText}`)
+        }
       } catch (error) {
-        console.error('Failed to update stats:', error)
+        console.error('[Usage Stats] Failed to update stats:', error)
       }
+    } else {
+      console.log('[Usage Stats] User ID not set, skipping API call')
     }
+    return true
   }
 
   // 保存角色偏好到数据库
   const saveCharacterPreferences = async (preferences: Record<string, string>) => {
     if (!userId.value) return false
     try {
-      const response = await fetch(`/.netlify/functions/api/user-details/${userId.value}`, {
+      const response = await fetch(`/.netlify/functions/api-user-details/${userId.value}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ characterPreferences: preferences })
@@ -240,7 +297,7 @@ export const useUserStore = defineStore('user', () => {
   const loadCharacterPreferences = async (): Promise<Record<string, string> | null> => {
     if (!userId.value) return null
     try {
-      const response = await fetch(`/.netlify/functions/api/user-details/${userId.value}`)
+      const response = await fetch(`/.netlify/functions/api-user-details/${userId.value}`)
       const data = await response.json()
       if (data.user?.character_preferences) {
         characterPreferences.value = data.user.character_preferences
@@ -348,6 +405,7 @@ export const useUserStore = defineStore('user', () => {
     updateUserInfo,
     clearAllData,
     incrementUsage,
+    checkDailyLimit,
     checkTarotWeekReset,
     canDoTarotReading,
     useTarotReading,

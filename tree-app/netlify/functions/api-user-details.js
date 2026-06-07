@@ -36,10 +36,20 @@ export async function handler(event, context) {
         };
       }
 
+      const user = userRows[0];
+      // 解析 character_preferences JSON
+      if (user.character_preferences) {
+        try {
+          user.character_preferences = JSON.parse(user.character_preferences);
+        } catch (e) {
+          user.character_preferences = null;
+        }
+      }
+
       return {
         statusCode: 200,
         body: JSON.stringify({
-          user: userRows[0],
+          user: user,
           stats: statsRows.length > 0 ? statsRows[0] : null
         }),
         headers: { 'Access-Control-Allow-Origin': '*' }
@@ -63,12 +73,22 @@ export async function handler(event, context) {
         };
       }
 
-      const { isMember, memberExpireAt } = JSON.parse(event.body);
+      const body = JSON.parse(event.body);
       
-      await conn.execute(
-        'UPDATE users SET is_member = ?, member_expire_at = ?, last_active_at = NOW() WHERE id = ?',
-        [isMember, memberExpireAt || null, userId]
-      );
+      // 处理角色偏好更新
+      if (body.characterPreferences) {
+        const characterPreferences = JSON.stringify(body.characterPreferences);
+        await conn.execute(
+          'UPDATE users SET character_preferences = ?, updated_at = NOW() WHERE id = ?',
+          [characterPreferences, userId]
+        );
+      } else if (body.isMember !== undefined || body.memberExpireAt !== undefined) {
+        // 处理会员状态更新
+        await conn.execute(
+          'UPDATE users SET is_member = ?, member_expire_at = ?, updated_at = NOW() WHERE id = ?',
+          [body.isMember || false, body.memberExpireAt || null, userId]
+        );
+      }
 
       return {
         statusCode: 200,

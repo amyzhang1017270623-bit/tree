@@ -144,6 +144,18 @@
       </div>
     </div>
   </div>
+  
+  <DailyLimitModal
+    :visible="showDailyLimitModal"
+    title="今日使用次数已达上限"
+    message="聊了这么久了，请我喝一杯奶茶吧"
+    :current-usage="dailyLimitData.currentUsage"
+    :daily-limit="dailyLimitData.dailyLimit"
+    buy-text="买一杯"
+    cancel-text="取消"
+    @close="showDailyLimitModal = false"
+    @buy="showDailyLimitModal = false"
+  />
 </template>
 
 <script setup lang="ts">
@@ -152,6 +164,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useUserStore } from '../stores/user'
 import { getTreeHoleReply, analyzeImageContent, analyzeVoice, setRecognitionResult } from '../utils/api'
+import DailyLimitModal from '../components/DailyLimitModal.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -175,8 +188,37 @@ const recognizedText = ref('')
 const isRecognizing = ref(false)
 let audioStream: MediaStream | null = null
 
+const showDailyLimitModal = ref(false)
+const dailyLimitData = ref({ currentUsage: 0, dailyLimit: 100 })
+
 const triggerImageUpload = () => {
   imageInputRef.value?.click()
+}
+
+// 清理AI回复中的动作描述语句
+const cleanReply = (text: string): string => {
+  let cleaned = text
+  
+  // 移除动作描述语句（星号包裹的内容）
+  cleaned = cleaned.replace(/\*[^*]+\*/g, '')
+  
+  // 移除动作描述语句（中文括号内的内容）
+  cleaned = cleaned.replace(/（[^）]+）/g, '')
+  
+  // 移除动作描述语句（英文括号内的内容）
+  cleaned = cleaned.replace(/\([^)]+\)/g, '')
+  
+  // 移除动作描述语句（方括号内的内容）
+  cleaned = cleaned.replace(/\[([^\]]+)\]/g, '')
+  
+  // 移除表情符号
+  cleaned = cleaned.replace(/[\u{1F000}-\u{1F9FF}]/gu, '')
+  cleaned = cleaned.replace(/[\u{2600}-\u{26FF}]/gu, '')
+  
+  // 移除多余空格和换行
+  cleaned = cleaned.replace(/\s+/g, ' ').trim()
+  
+  return cleaned
 }
 
 const toggleRecording = async () => {
@@ -368,12 +410,13 @@ const handleVoiceReply = async (audioBlob?: Blob, webSpeechResult?: string) => {
     // 根据识别的文字获取AI回复
     const prompt = finalRecognizedText || '用户发送了语音消息，请友好回复'
     const reply = await getTreeHoleReply(prompt)
-    messages.value.push({ isUser: false, text: reply || t('treeHole.imListening') })
+    const cleanedReply = cleanReply(reply || t('treeHole.imListening'))
+    messages.value.push({ isUser: false, text: cleanedReply })
     
   } catch (error) {
     console.error('[Voice Reply] Failed to get AI reply:', error)
     const fallbackReply = generateFallbackReply('语音')
-    messages.value.push({ isUser: false, text: fallbackReply })
+    messages.value.push({ isUser: false, text: cleanReply(fallbackReply) })
   } finally {
     isLoading.value = false
     scrollToBottom()
@@ -487,6 +530,13 @@ const generateFallbackReply = (input: string): string => {
 const sendMessage = async () => {
   if (!messageInput.value.trim() || isLoading.value) return
   
+  const limitResult = await userStore.checkDailyLimit()
+  if (!limitResult.canUse) {
+    dailyLimitData.value = { currentUsage: limitResult.currentUsage, dailyLimit: limitResult.dailyLimit }
+    showDailyLimitModal.value = true
+    return
+  }
+  
   messages.value.push({ isUser: true, text: messageInput.value })
   messageInput.value = ''
   isLoading.value = true
@@ -495,13 +545,14 @@ const sendMessage = async () => {
   
   try {
     const reply = await getTreeHoleReply(messages.value[messages.value.length - 1].text)
-    messages.value.push({ isUser: false, text: reply || t('treeHole.imListening') })
+    const cleanedReply = cleanReply(reply || t('treeHole.imListening'))
+    messages.value.push({ isUser: false, text: cleanedReply })
     userStore.incrementUsage('treeHole')
     scrollToBottom()
   } catch (error) {
     console.error('Failed to get AI reply, using fallback:', error)
     const fallbackReply = generateFallbackReply(messages.value[messages.value.length - 1].text)
-    messages.value.push({ isUser: false, text: fallbackReply })
+    messages.value.push({ isUser: false, text: cleanReply(fallbackReply) })
     userStore.incrementUsage('treeHole')
     scrollToBottom()
   } finally {
@@ -514,6 +565,13 @@ const handleImageUpload = async (event: Event) => {
   const file = target.files?.[0]
   
   if (!file) return
+  
+  const limitResult = await userStore.checkDailyLimit()
+  if (!limitResult.canUse) {
+    dailyLimitData.value = { currentUsage: limitResult.currentUsage, dailyLimit: limitResult.dailyLimit }
+    showDailyLimitModal.value = true
+    return
+  }
   
   const reader = new FileReader()
   reader.onload = async (e) => {
@@ -530,17 +588,30 @@ const handleImageUpload = async (event: Event) => {
     isLoading.value = true
     
     try {
-      const imageText = await analyzeImageContent(result, '请描述这张图片的内容，分析图片中的场景、人物表情和可能的情绪')
+      // 尝试分析图片内容，但设置较短的超时
+      let imageText = ''
+      try {
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('图片分析超时')), 10000)
+        )
+        const analyzePromise = analyzeImageContent(result, '请描述这张图片的内容，分析图片中的场景、人物表情和可能的情绪')
+        imageText = await Promise.race([analyzePromise, timeoutPromise])
+        console.log('[Image Analysis] Success:', imageText)
+      } catch (analyzeError) {
+        console.warn('[Image Analysis] Failed or timed out:', analyzeError.message)
+        // 不抛出错误，继续使用通用回复
+      }
       
-      const prompt = imageText ? `图片内容：${imageText}\n请根据图片内容进行回复` : '请根据图片内容进行回复'
+      const prompt = imageText ? `图片内容：${imageText}\n请根据图片内容进行回复` : '用户发送了一张图片，请友好回复'
       
       const reply = await getTreeHoleReply(prompt)
-      messages.value.push({ isUser: false, text: reply || t('treeHole.imListening') })
+      const cleanedReply = cleanReply(reply || t('treeHole.imListening'))
+      messages.value.push({ isUser: false, text: cleanedReply })
       userStore.incrementUsage('treeHole')
     } catch (error) {
       console.error('Error processing image:', error)
       const fallbackReply = generateFallbackReply('图片')
-      messages.value.push({ isUser: false, text: fallbackReply })
+      messages.value.push({ isUser: false, text: cleanReply(fallbackReply) })
       userStore.incrementUsage('treeHole')
     } finally {
       isLoading.value = false

@@ -14,11 +14,6 @@
 
     <div class="px-6 py-8">
 
-    <div class="character text-center mb-8">
-      <div class="text-6xl mb-4">{{ characterAvatar }}</div>
-      <p class="text-gray-600">{{ characterText }}</p>
-    </div>
-
     <!-- 塔罗次卡 -->
     <div class="mb-8">
       <h2 class="text-lg font-semibold mb-4">{{ t('payment.tarotCard') }}</h2>

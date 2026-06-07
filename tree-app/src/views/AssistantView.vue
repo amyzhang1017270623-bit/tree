@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useReminderStore } from '@/stores/reminder'
 import { useUserStore } from '@/stores/user'
 import { callQwenAPI, analyzeVoice } from '@/utils/api'
+import DailyLimitModal from '@/components/DailyLimitModal.vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -24,6 +25,8 @@ const isLoading = ref(false)
 const showAddReminderConfirm = ref(false)
 const pendingReminder = ref<{ date: string; title: string } | null>(null)
 const editReminderTitle = ref('')
+const showDailyLimitModal = ref(false)
+const dailyLimitData = ref({ currentUsage: 0, dailyLimit: 100 })
 
 
 const mediaRecorder = ref<MediaRecorder | null>(null)
@@ -392,6 +395,13 @@ const detectDateInText = (input: string): { date: string; title: string } | null
 const sendMessage = async () => {
   const text = messageInput.value.trim()
   if (!text || isLoading.value) return
+
+  const limitResult = await userStore.checkDailyLimit()
+  if (!limitResult.canUse) {
+    dailyLimitData.value = { currentUsage: limitResult.currentUsage, dailyLimit: limitResult.dailyLimit }
+    showDailyLimitModal.value = true
+    return
+  }
 
   messages.value.push({
     id: Date.now().toString(),
@@ -955,6 +965,18 @@ onUnmounted(() => {
       </div>
     </div>
   </div>
+  
+  <DailyLimitModal
+    :visible="showDailyLimitModal"
+    title="今日使用次数已达上限"
+    message="聊了这么久了，请我喝一杯奶茶吧"
+    :current-usage="dailyLimitData.currentUsage"
+    :daily-limit="dailyLimitData.dailyLimit"
+    buy-text="买一杯"
+    cancel-text="取消"
+    @close="showDailyLimitModal = false"
+    @buy="showDailyLimitModal = false"
+  />
 </template>
 
 <style scoped>

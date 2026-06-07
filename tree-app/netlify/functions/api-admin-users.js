@@ -20,10 +20,41 @@ export async function handler(event, context) {
       const search = params.get('search');
       const gender = params.get('gender');
       const queryUserId = params.get('id');
-      const pathUserId = event.path.split('/').pop();
+      const pathParts = event.path.split('/');
+      const pathUserId = pathParts[pathParts.length - 1] !== 'stats' 
+        ? pathParts[pathParts.length - 1] 
+        : pathParts[pathParts.length - 2];
       const userId = queryUserId || (pathUserId !== 'api-admin-users' ? pathUserId : null);
 
       if (userId) {
+        // 检查是否是获取统计数据
+        if (pathParts[pathParts.length - 1] === 'stats') {
+          // 获取用户使用统计数据
+          if (isMockMode) {
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ emotion: 5, tarot: 3, loveAssistant: 2, treeHole: 4, assistant: 1 }),
+              headers: { 'Access-Control-Allow-Origin': '*' }
+            };
+          } else {
+            const [statsRows] = await conn.execute(
+              'SELECT module, SUM(count) as total FROM usage_stats WHERE user_id = ? GROUP BY module',
+              [userId]
+            );
+            
+            const stats = {};
+            for (const row of statsRows) {
+              stats[row.module] = parseInt(row.total) || 0;
+            }
+            
+            return {
+              statusCode: 200,
+              body: JSON.stringify(stats),
+              headers: { 'Access-Control-Allow-Origin': '*' }
+            };
+          }
+        }
+        
         let user = null;
         
         if (isMockMode) {

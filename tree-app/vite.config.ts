@@ -106,7 +106,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false
       },
-      '/.netlify/functions/api/user-details': {
+      '/\.netlify/functions/api/user-details': {
+        target: 'http://localhost:8888',
+        changeOrigin: true,
+        secure: false
+      },
+      '/\.netlify/functions/api-admin': {
         target: 'http://localhost:8888',
         changeOrigin: true,
         secure: false

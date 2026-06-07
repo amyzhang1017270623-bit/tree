@@ -66,7 +66,7 @@ export async function handler(event, context) {
           );
           statistics.todayRegistrations = todayRegistrations[0].count || 0;
 
-          const dayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+          const dayLabels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
           const todayDayOfWeek = new Date().getDay();
           const weekDayLabels = [];
           for (let i = 6; i >= 0; i--) {
