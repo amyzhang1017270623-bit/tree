@@ -44,8 +44,7 @@ export const detectRegion = async (): Promise<boolean> => {
     const timeout = setTimeout(() => controller.abort(), 2000)
     
     const response = await fetch('https://api.ipify.org?format=json', {
-      signal: controller.signal,
-      timeout: 2000
+      signal: controller.signal
     })
     clearTimeout(timeout)
     

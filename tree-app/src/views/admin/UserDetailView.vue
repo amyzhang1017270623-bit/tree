@@ -227,7 +227,7 @@ const editForm = ref({
   birthTime: ''
 })
 
-const formatKey = (key: string) => {
+const formatKey = (key: string | number) => {
   const keyMap: Record<string, string> = {
     avatar: '头像',
     personality: '性格',
@@ -238,7 +238,7 @@ const formatKey = (key: string) => {
     age: '年龄',
     tone: '语气'
   }
-  return keyMap[key] || key
+  return keyMap[String(key)] || String(key)
 }
 
 const formatDateTime = (dateString: string) => {

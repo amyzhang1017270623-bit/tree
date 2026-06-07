@@ -591,14 +591,18 @@ const handleImageUpload = async (event: Event) => {
       // 尝试分析图片内容，但设置较短的超时
       let imageText = ''
       try {
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise: Promise<never> = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('图片分析超时')), 10000)
         )
         const analyzePromise = analyzeImageContent(result, '请描述这张图片的内容，分析图片中的场景、人物表情和可能的情绪')
         imageText = await Promise.race([analyzePromise, timeoutPromise])
         console.log('[Image Analysis] Success:', imageText)
-      } catch (analyzeError) {
-        console.warn('[Image Analysis] Failed or timed out:', analyzeError.message)
+      } catch (analyzeError: unknown) {
+        if (analyzeError instanceof Error) {
+          console.warn('[Image Analysis] Failed or timed out:', analyzeError.message)
+        } else {
+          console.warn('[Image Analysis] Failed or timed out:', analyzeError)
+        }
         // 不抛出错误，继续使用通用回复
       }
       

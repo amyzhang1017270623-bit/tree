@@ -270,6 +270,13 @@ import { useRouter } from 'vue-router'
 import { useAdminStore } from '../../stores/admin'
 import AdminLayout from './AdminLayout.vue'
 
+interface Admin {
+  id: number
+  username: string
+  name: string
+  createdAt?: string
+}
+
 const router = useRouter()
 const adminStore = useAdminStore()
 
@@ -296,7 +303,7 @@ const passwordForm = ref({
   confirmPassword: ''
 })
 
-const currentAdmin = ref(null)
+const currentAdmin = ref<Admin | null>(null)
 
 const isSaving = ref(false)
 const isAdding = ref(false)
